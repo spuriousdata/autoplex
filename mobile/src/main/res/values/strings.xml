@@ -11,4 +11,5 @@
 	<string name="remote_server_label">Remote</string>
 	<string name="relay_server_label">Relay</string>
 	<string name="use_label">Use</string>
+	<string name="relay_warning">Warning: Relay servers have bandwidth capped to 2mpbs. Don\'t use them unless you have to.</string>
 </resources>

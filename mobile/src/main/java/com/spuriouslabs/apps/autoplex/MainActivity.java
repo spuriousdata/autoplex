@@ -1,18 +1,22 @@
 package com.spuriouslabs.apps.autoplex;
 
+import android.support.design.widget.BaseTransientBottomBar;
+import android.support.design.widget.Snackbar;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.content.SharedPreferences;
 import android.view.View;
+import android.widget.CheckBox;
 import android.widget.EditText;
 
 import com.spuriouslabs.apps.autoplex.plex.utils.PlexCallback;
 import com.spuriouslabs.apps.autoplex.plex.PlexConnector;
 import com.spuriouslabs.apps.autoplex.plex.utils.PlexConnectionSet;
 
+import static android.widget.Toast.LENGTH_LONG;
+
 public class MainActivity extends AppCompatActivity
 {
-
 	@Override
 	protected void onCreate(Bundle savedInstanceState)
 	{
@@ -59,5 +63,30 @@ public class MainActivity extends AppCompatActivity
 				relay_server_field.setText(param.getRelayUri());
 			}
 		});
+	}
+
+	public void setPreferredServer(View view) {
+		Snackbar warn = Snackbar.make(view, R.string.relay_warning, 10000);
+		SharedPreferences settings = getSharedPreferences(this.getString(R.string.settings_name), MODE_PRIVATE);
+		String setting_name = "preferred_server";
+		CheckBox local = (CheckBox) findViewById(R.id.use_local_checkbox);
+		CheckBox relay = (CheckBox) findViewById(R.id.use_relay_checkbox);
+		CheckBox remote = (CheckBox) findViewById(R.id.use_remote_checkbox);
+
+		if (view.getId() == R.id.use_local_checkbox) {
+			relay.setChecked(false);
+			remote.setChecked(false);
+			settings.edit().putString(setting_name, "local").apply();
+		} else if (view.getId() == R.id.use_relay_checkbox) {
+			warn.show();
+			local.setChecked(false);
+			remote.setChecked(false);
+			settings.edit().putString(setting_name, "relay").apply();
+		} else if (view.getId() == R.id.use_remote_checkbox) {
+			local.setChecked(false);
+			relay.setChecked(false);
+			settings.edit().putString(setting_name, "remote").apply();
+		}
+
 	}
 }
