@@ -13,6 +13,7 @@ import com.spuriouslabs.apps.autoplex.http.HttpRequest;
 import com.android.volley.toolbox.Volley;
 import com.spuriouslabs.apps.autoplex.R;
 import com.spuriouslabs.apps.autoplex.plex.utils.MenuItem;
+import com.spuriouslabs.apps.autoplex.plex.utils.MusicLibrary;
 import com.spuriouslabs.apps.autoplex.plex.utils.PlexCallback;
 import com.spuriouslabs.apps.autoplex.plex.utils.PlexConnectionSet;
 
@@ -70,7 +71,7 @@ public class PlexConnector
 		post_setup_callback.callback();
 	*/
 
-	public void discoverMusicLibraryKey(String plex_uri)
+	public void discoverMusicLibraryKey(String plex_uri, final PlexCallback<MusicLibrary> callback)
 	{
 		Map<String, String> headers = new HashMap<String, String>();
 		headers.put("X-Plex-Token", token);
@@ -84,8 +85,12 @@ public class PlexConnector
 			{
 				LibrarySectionParser lsp = new LibrarySectionParser();
 				try {
-					music_library_key = Integer.parseInt(lsp.parse_library_sections(response));
-					settings.edit().putInt("music_library_key", music_library_key).apply();
+					MusicLibrary ml = lsp.parse_library_sections(response);
+					settings.edit()
+							.putInt("music_library_key", ml.getId())
+							.putString("music_library_name", ml.getName())
+							.apply();
+					callback.callback(ml);
 				} catch (XmlPullParserException | IOException e) {
 					Log.e("autoplex", "Exception at line 95: " + e.toString());
 				}

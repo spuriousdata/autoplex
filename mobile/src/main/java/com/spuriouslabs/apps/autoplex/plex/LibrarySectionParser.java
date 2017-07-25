@@ -3,6 +3,8 @@ package com.spuriouslabs.apps.autoplex.plex;
 import android.support.annotation.Nullable;
 import android.util.Xml;
 
+import com.spuriouslabs.apps.autoplex.plex.utils.MusicLibrary;
+
 import org.xmlpull.v1.XmlPullParser;
 import org.xmlpull.v1.XmlPullParserException;
 
@@ -18,7 +20,7 @@ import java.nio.charset.StandardCharsets;
 public class LibrarySectionParser {
 	private final String ns = null;
 
-	public String parse_library_sections(String xml) throws XmlPullParserException, IOException
+	public MusicLibrary parse_library_sections(String xml) throws XmlPullParserException, IOException
 	{
 		InputStream in = new ByteArrayInputStream(xml.getBytes(StandardCharsets.UTF_8));
 		try {
@@ -33,7 +35,7 @@ public class LibrarySectionParser {
 	}
 
 	@Nullable
-	private String parse_feed(XmlPullParser parser) throws XmlPullParserException, IOException
+	private MusicLibrary parse_feed(XmlPullParser parser) throws XmlPullParserException, IOException
 	{
 		int event_type = parser.getEventType();
 
@@ -45,7 +47,8 @@ public class LibrarySectionParser {
 					name = parser.getName();
 					if (name.equals("Directory")) {
 						if (parser.getAttributeValue(ns, "type").equals("artist"))
-							return parser.getAttributeValue(ns, "key");
+							return new MusicLibrary(parser.getAttributeValue(ns, "title"),
+									Integer.parseInt(parser.getAttributeValue(ns, "key")));
 					}
 					break;
 			}

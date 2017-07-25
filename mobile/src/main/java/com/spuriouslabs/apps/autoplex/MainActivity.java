@@ -6,9 +6,12 @@ import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.content.SharedPreferences;
 import android.view.View;
+import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.EditText;
+import android.widget.ProgressBar;
 
+import com.spuriouslabs.apps.autoplex.plex.utils.MusicLibrary;
 import com.spuriouslabs.apps.autoplex.plex.utils.PlexCallback;
 import com.spuriouslabs.apps.autoplex.plex.PlexConnector;
 import com.spuriouslabs.apps.autoplex.plex.utils.PlexConnectionSet;
@@ -29,6 +32,8 @@ public class MainActivity extends AppCompatActivity
 		String local_uri = settings.getString("local_server_uri", null);
 		String relay_uri = settings.getString("relay_server_uri", null);
 		String remote_uri = settings.getString("remote_server_uri", null);
+		String music_name = settings.getString("music_library_name", null);
+		int music_id = settings.getInt("music_library_key", -1);
 
 		if (token != null)
 			((EditText)findViewById(R.id.token_field)).setText(token);
@@ -41,6 +46,12 @@ public class MainActivity extends AppCompatActivity
 
 		if (remote_uri != null)
 			((EditText)findViewById(R.id.remote_server_textbox)).setText(remote_uri);
+
+		if (music_name != null)
+			((EditText)findViewById(R.id.music_library_name_textbox)).setText(music_name);
+
+		if (music_id != -1)
+			((EditText)findViewById(R.id.music_library_id_textbox)).setText(Integer.toString(music_id));
 	}
 
 	public void discoverPlexServers(View view) {
@@ -50,10 +61,13 @@ public class MainActivity extends AppCompatActivity
 				this.getString(R.string.token_name), token_field.getText().toString()
 		).apply();
 
+		showProgressBar();
+
 		PlexConnector plex = PlexConnector.getInstance(this);
 		plex.discoverPlexConnections(new PlexCallback<PlexConnectionSet>() {
 			@Override
 			public void callback(PlexConnectionSet param) {
+				hideProgressBar();
 				EditText local_server_field = (EditText)findViewById(R.id.local_server_textbox);
 				EditText remote_server_field = (EditText)findViewById(R.id.remote_server_textbox);
 				EditText relay_server_field = (EditText)findViewById(R.id.relay_server_textbox);
@@ -61,6 +75,38 @@ public class MainActivity extends AppCompatActivity
 				local_server_field.setText(param.getLocalUri());
 				remote_server_field.setText(param.getRemoteUri());
 				relay_server_field.setText(param.getRelayUri());
+			}
+		});
+	}
+
+	private void discoverMusicLibraryId(View view)
+	{
+		PlexConnector plex = PlexConnector.getInstance(this);
+		SharedPreferences settings = getSharedPreferences(this.getString(R.string.settings_name), MODE_PRIVATE);
+		String uri = new String();
+
+		switch (settings.getString("preferred_server", null)) {
+			case "local":
+				uri = settings.getString("local_server_uri", null);
+				break;
+			case "relay":
+				uri = settings.getString("relay_server_uri", null);
+				break;
+			case "remote":
+				uri = settings.getString("remote_server_uri", null);
+				break;
+			default:
+				Snackbar.make(view, R.string.unknown_error, 2000).show();
+		}
+
+		showProgressBar();
+
+		plex.discoverMusicLibraryKey(uri, new PlexCallback<MusicLibrary>() {
+			@Override
+			public void callback(MusicLibrary param) {
+				hideProgressBar();
+				((EditText)findViewById(R.id.music_library_name_textbox)).setText(param.getName());
+				((EditText)findViewById(R.id.music_library_id_textbox)).setText(Integer.toString(param.getId()));
 			}
 		});
 	}
@@ -88,5 +134,45 @@ public class MainActivity extends AppCompatActivity
 			settings.edit().putString(setting_name, "remote").apply();
 		}
 
+		discoverMusicLibraryId(view);
 	}
+
+	private void disableForm()
+	{
+		((Button)findViewById(R.id.discover_server_button)).setEnabled(false);
+		((EditText)findViewById(R.id.token_field)).setEnabled(false);
+		((EditText)findViewById(R.id.local_server_textbox)).setEnabled(false);
+		((EditText)findViewById(R.id.remote_server_textbox)).setEnabled(false);
+		((EditText)findViewById(R.id.relay_server_textbox)).setEnabled(false);
+		((CheckBox)findViewById(R.id.use_local_checkbox)).setEnabled(false);
+		((CheckBox)findViewById(R.id.use_relay_checkbox)).setEnabled(false);
+		((CheckBox)findViewById(R.id.use_remote_checkbox)).setEnabled(false);
+		((EditText)findViewById(R.id.music_library_id_textbox)).setEnabled(false);
+		((EditText)findViewById(R.id.music_library_name_textbox)).setEnabled(false);
+	}
+
+	private void enableForm()
+	{
+		((Button)findViewById(R.id.discover_server_button)).setEnabled(true);
+		((EditText)findViewById(R.id.token_field)).setEnabled(true);
+		((EditText)findViewById(R.id.local_server_textbox)).setEnabled(true);
+		((EditText)findViewById(R.id.remote_server_textbox)).setEnabled(true);
+		((EditText)findViewById(R.id.relay_server_textbox)).setEnabled(true);
+		((CheckBox)findViewById(R.id.use_local_checkbox)).setEnabled(true);
+		((CheckBox)findViewById(R.id.use_relay_checkbox)).setEnabled(true);
+		((CheckBox)findViewById(R.id.use_remote_checkbox)).setEnabled(true);
+		((EditText)findViewById(R.id.music_library_id_textbox)).setEnabled(true);
+		((EditText)findViewById(R.id.music_library_name_textbox)).setEnabled(true);
+	}
+
+	private void showProgressBar()
+	{
+		disableForm();
+		((ProgressBar)findViewById(R.id.progressBar)).setVisibility(View.VISIBLE);
+	}
+
+	private void hideProgressBar() {
+		enableForm();
+		((ProgressBar) findViewById(R.id.progressBar)).setVisibility(View.INVISIBLE);
+	};
 }
