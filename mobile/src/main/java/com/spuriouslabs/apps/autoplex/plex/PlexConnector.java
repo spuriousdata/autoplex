@@ -3,12 +3,12 @@ package com.spuriouslabs.apps.autoplex.plex;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.util.Log;
+import android.view.Menu;
 
 import com.android.volley.Request;
 import com.android.volley.RequestQueue;
 import com.android.volley.Response;
 import com.android.volley.VolleyError;
-import com.android.volley.toolbox.RequestFuture;
 import com.spuriouslabs.apps.autoplex.http.HttpRequest;
 import com.android.volley.toolbox.Volley;
 import com.spuriouslabs.apps.autoplex.R;
@@ -37,8 +37,8 @@ public class PlexConnector
 	private PlexConnectionSet connections;
 	private String token;
 	private RequestQueue rq;
-	private int music_library_key = -1;
-	Map<String, String> top_level_menu;
+	private MusicLibrary music_library;
+	List<MenuItem> top_level_menu;
 
 	private static PlexConnector instance = null;
 
@@ -56,20 +56,11 @@ public class PlexConnector
 
 		String token_placeholder = ctx.getString(R.string.token_placeholder);
 
-
 		if (token_placeholder.equals(token))
-			// Raise some kind of exception or error or something?
-			;;
+			Log.e("autoplex", "Token not set");
 
 		rq = Volley.newRequestQueue(ctx);
 	}
-
-	/*
-	 * Setup steps in order:
-		discoverPlexConnections();
-		discoverMusicLibraryKey();
-		post_setup_callback.callback();
-	*/
 
 	public void discoverMusicLibraryKey(String plex_uri, final PlexCallback<MusicLibrary> callback)
 	{
@@ -85,12 +76,12 @@ public class PlexConnector
 			{
 				LibrarySectionParser lsp = new LibrarySectionParser();
 				try {
-					MusicLibrary ml = lsp.parse_library_sections(response);
+					music_library = lsp.parse_library_sections(response);
 					settings.edit()
-							.putInt("music_library_key", ml.getId())
-							.putString("music_library_name", ml.getName())
+							.putInt("music_library_key", music_library.getId())
+							.putString("music_library_name", music_library.getName())
 							.apply();
-					callback.callback(ml);
+					callback.callback(music_library);
 				} catch (XmlPullParserException | IOException e) {
 					Log.e("autoplex", "Exception at line 95: " + e.toString());
 				}
@@ -138,26 +129,56 @@ public class PlexConnector
 		rq.add(req);
 	}
 
-	public List<MenuItem> getTopMenu(String plex_uri)
+	public List<MenuItem> getTopMenu()
+	{
+		return top_level_menu;
+	}
+
+	public void prefetchMenuItems()
 	{
 		Map<String, String> headers = new HashMap<String, String>();
-		RequestFuture<String> future = RequestFuture.newFuture();
-		String menu_url = plex_uri + "/library/sections/" + music_library_key;
+		String menu_url = getPreferredUri() + "/library/sections/" + music_library.getId();
 
 		headers.put("X-Plex-Token", token);
 
-		HttpRequest req = new HttpRequest(Request.Method.GET, menu_url, future, future);
+		HttpRequest req = new HttpRequest(Request.Method.GET, menu_url, new Response.Listener<String>() {
+			@Override
+			public void onResponse(String response)
+			{
+				MusicMenuParser mmp = new MusicMenuParser();
+				try {
+					top_level_menu = mmp.parse_menu(response);
+				} catch (XmlPullParserException | IOException e) {
+					e.printStackTrace();
+				}
+			}
+		}, new Response.ErrorListener() {
+			@Override
+			public void onErrorResponse(VolleyError error)
+			{
+				error.printStackTrace();
+			}
+		});
 
 		req.setHeaders(headers);
 		rq.add(req);
+	}
 
-		MusicMenuParser mmp = new MusicMenuParser();
-		try {
-			String data = future.get();
-			return mmp.parse_menu(data);
-		} catch (XmlPullParserException | IOException | InterruptedException | ExecutionException e) {
-			e.printStackTrace();
+	public String getPreferredUri()
+	{
+		String uri = null;
+
+		switch (settings.getString("preferred_server", null)) {
+			case "local":
+				uri = settings.getString("local_server_uri", null);
+				break;
+			case "relay":
+				uri = settings.getString("relay_server_uri", null);
+				break;
+			case "remote":
+				uri = settings.getString("remote_server_uri", null);
+				break;
 		}
-		return null;
+		return uri;
 	}
 }

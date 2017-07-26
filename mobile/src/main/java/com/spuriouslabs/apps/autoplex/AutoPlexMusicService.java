@@ -85,6 +85,7 @@ public class AutoPlexMusicService extends MediaBrowserService
 				MediaSession.FLAG_HANDLES_TRANSPORT_CONTROLS);
 
 		connector = PlexConnector.getInstance(this);
+		connector.prefetchMenuItems();
 	}
 
 	@Override
@@ -106,11 +107,11 @@ public class AutoPlexMusicService extends MediaBrowserService
 		MediaDescription.Builder menu = new MediaDescription.Builder();
 
 		if (parentMediaId.equals("root")) {
-			/*for (MenuItem item : connector.getTopMenu()) {
+			for (MenuItem item : connector.getTopMenu()) {
 				menu.setTitle(item.getTitle()).setMediaId(item.getKey());
 				stuff.add(new MediaItem(menu.build(), MediaItem.FLAG_BROWSABLE));
 
-			}*/
+			}
 		} else if (parentMediaId == "all"){
 			//List<> connector.get_all_artists();
 		}

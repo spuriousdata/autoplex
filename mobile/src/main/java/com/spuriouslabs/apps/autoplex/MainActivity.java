@@ -83,21 +83,7 @@ public class MainActivity extends AppCompatActivity
 	{
 		PlexConnector plex = PlexConnector.getInstance(this);
 		SharedPreferences settings = getSharedPreferences(this.getString(R.string.settings_name), MODE_PRIVATE);
-		String uri = new String();
-
-		switch (settings.getString("preferred_server", null)) {
-			case "local":
-				uri = settings.getString("local_server_uri", null);
-				break;
-			case "relay":
-				uri = settings.getString("relay_server_uri", null);
-				break;
-			case "remote":
-				uri = settings.getString("remote_server_uri", null);
-				break;
-			default:
-				Snackbar.make(view, R.string.unknown_error, 2000).show();
-		}
+		String uri = plex.getPreferredUri();
 
 		showProgressBar();
 
