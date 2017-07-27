@@ -222,4 +222,18 @@
 		android:layout_marginRight="16dp"
 		app:layout_constraintRight_toRightOf="parent"/>
 
+	<Button
+		android:id="@+id/fetch_library_data_button"
+		android:layout_width="wrap_content"
+		android:layout_height="wrap_content"
+		android:layout_marginLeft="0dp"
+		android:layout_marginRight="16dp"
+		android:layout_marginTop="16dp"
+		android:onClick="fetchLibraryData"
+		android:text="Fetch Library Data"
+		app:layout_constraintHorizontal_bias="1.0"
+		app:layout_constraintLeft_toLeftOf="parent"
+		app:layout_constraintRight_toRightOf="parent"
+		app:layout_constraintTop_toBottomOf="@+id/music_library_id_textbox"/>
+
 </android.support.constraint.ConstraintLayout>

@@ -1,5 +1,6 @@
-package com.spuriouslabs.apps.autoplex.plex;
+package com.spuriouslabs.apps.autoplex.plex.xml;
 
+import android.media.browse.MediaBrowser;
 import android.support.annotation.Nullable;
 import android.util.Xml;
 
@@ -50,7 +51,15 @@ public class MusicMenuParser
 				case XmlPullParser.START_TAG:
 					name = parser.getName();
 					if (name.equals("Directory")) {
-						menu.add(new MenuItem(parser.getAttributeValue(ns, "title"), parser.getAttributeValue(ns, "key")));
+						menu.add(new MenuItem(
+								parser.getAttributeValue(ns, "title"),
+								parser.getAttributeValue(ns, "key"),
+								MediaBrowser.MediaItem.FLAG_BROWSABLE));
+					} else if (name.equals("Track")) {
+						menu.add(new MenuItem(
+								parser.getAttributeValue(ns, "title"),
+								parser.getAttributeValue(ns, "key"),
+								MediaBrowser.MediaItem.FLAG_PLAYABLE));
 					}
 					break;
 			}

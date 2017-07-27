@@ -1,5 +1,12 @@
 package com.spuriouslabs.apps.autoplex.plex.utils;
 
+import android.support.annotation.IntDef;
+
+import java.util.List;
+
+import static android.media.browse.MediaBrowser.MediaItem.FLAG_BROWSABLE;
+import static android.media.browse.MediaBrowser.MediaItem.FLAG_PLAYABLE;
+
 /**
  * Created by omalleym on 7/19/17.
  */
@@ -7,11 +14,17 @@ package com.spuriouslabs.apps.autoplex.plex.utils;
 public class MenuItem {
 	private final String title;
 	private final String key;
+	private final int flag;
+	private List<MenuItem> children;
 
-	public MenuItem(final String title, final String key)
+	@IntDef(flag=true, value = { FLAG_BROWSABLE, FLAG_PLAYABLE })
+	public @interface Flags {}
+
+	public MenuItem(final String title, final String key, @Flags int flag)
 	{
 		this.title = title;
 		this.key = key;
+		this.flag = flag;
 	}
 
 	public boolean equals(MenuItem other)
@@ -27,5 +40,20 @@ public class MenuItem {
 	public String getKey()
 	{
 		return key;
+	}
+
+	public @Flags int getFlag()
+	{
+		return flag;
+	}
+
+	public void addChild(MenuItem child)
+	{
+		children.add(child);
+	}
+
+	public List<MenuItem> getChildren()
+	{
+		return children;
 	}
 }

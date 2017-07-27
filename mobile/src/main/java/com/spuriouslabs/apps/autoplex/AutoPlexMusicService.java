@@ -85,7 +85,7 @@ public class AutoPlexMusicService extends MediaBrowserService
 				MediaSession.FLAG_HANDLES_TRANSPORT_CONTROLS);
 
 		connector = PlexConnector.getInstance(this);
-		connector.prefetchMenuItems();
+		//connector.prefetchMenuItems();
 	}
 
 	@Override
@@ -103,19 +103,7 @@ public class AutoPlexMusicService extends MediaBrowserService
 	@Override
 	public void onLoadChildren(final String parentMediaId, final Result<List<MediaItem>> result)
 	{
-		List<MediaItem> stuff = new ArrayList<>();
-		MediaDescription.Builder menu = new MediaDescription.Builder();
-
-		if (parentMediaId.equals("root")) {
-			for (MenuItem item : connector.getTopMenu()) {
-				menu.setTitle(item.getTitle()).setMediaId(item.getKey());
-				stuff.add(new MediaItem(menu.build(), MediaItem.FLAG_BROWSABLE));
-
-			}
-		} else if (parentMediaId == "all"){
-			//List<> connector.get_all_artists();
-		}
-		result.sendResult(stuff);
+		result.sendResult(connector.getMenu(parentMediaId));
 	}
 
 	private final class MediaSessionCallback extends MediaSession.Callback

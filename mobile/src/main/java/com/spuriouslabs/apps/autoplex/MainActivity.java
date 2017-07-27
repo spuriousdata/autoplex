@@ -33,6 +33,7 @@ public class MainActivity extends AppCompatActivity
 		String relay_uri = settings.getString("relay_server_uri", null);
 		String remote_uri = settings.getString("remote_server_uri", null);
 		String music_name = settings.getString("music_library_name", null);
+		String preferred_server = settings.getString("preferred_server", null);
 		int music_id = settings.getInt("music_library_key", -1);
 
 		if (token != null)
@@ -52,6 +53,20 @@ public class MainActivity extends AppCompatActivity
 
 		if (music_id != -1)
 			((EditText)findViewById(R.id.music_library_id_textbox)).setText(Integer.toString(music_id));
+
+		if (preferred_server != null) {
+			switch (preferred_server) {
+				case "local":
+					((CheckBox)findViewById(R.id.use_local_checkbox)).setChecked(true);
+					break;
+				case "relay":
+					((CheckBox)findViewById(R.id.use_relay_checkbox)).setChecked(true);
+					break;
+				case "remote":
+					((CheckBox)findViewById(R.id.use_remote_checkbox)).setChecked(true);
+					break;
+			}
+		}
 	}
 
 	public void discoverPlexServers(View view) {
@@ -121,6 +136,11 @@ public class MainActivity extends AppCompatActivity
 		}
 
 		discoverMusicLibraryId(view);
+	}
+
+	public void fetchLibraryData(View view)
+	{
+		PlexConnector.getInstance(this).prefetchMenuItems();
 	}
 
 	private void disableForm()

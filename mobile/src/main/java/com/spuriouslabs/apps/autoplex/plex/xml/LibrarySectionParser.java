@@ -1,4 +1,4 @@
-package com.spuriouslabs.apps.autoplex.plex;
+package com.spuriouslabs.apps.autoplex.plex.xml;
 
 import android.support.annotation.Nullable;
 import android.util.Xml;

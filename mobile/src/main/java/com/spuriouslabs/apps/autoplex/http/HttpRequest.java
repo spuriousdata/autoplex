@@ -17,8 +17,8 @@ import java.util.Map;
  */
 
 public class HttpRequest extends StringRequest {
-	private Map<String, String> headers;
-	private Map<String, String> params;
+	protected Map<String, String> headers;
+	protected Map<String, String> params;
 
 	public HttpRequest(int method, String url, Listener<String> listener, ErrorListener error_listener)
 	{
