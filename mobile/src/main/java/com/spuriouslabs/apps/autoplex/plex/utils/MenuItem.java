@@ -15,7 +15,6 @@ public class MenuItem {
 	private final String title;
 	private final String key;
 	private final int flag;
-	private List<MenuItem> children;
 
 	@IntDef(flag=true, value = { FLAG_BROWSABLE, FLAG_PLAYABLE })
 	public @interface Flags {}
@@ -45,15 +44,5 @@ public class MenuItem {
 	public @Flags int getFlag()
 	{
 		return flag;
-	}
-
-	public void addChild(MenuItem child)
-	{
-		children.add(child);
-	}
-
-	public List<MenuItem> getChildren()
-	{
-		return children;
 	}
 }

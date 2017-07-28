@@ -1,16 +1,19 @@
 package com.spuriouslabs.apps.autoplex;
 
-import android.media.MediaDescription;
 import android.media.browse.MediaBrowser.MediaItem;
 import android.media.session.MediaSession;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Message;
 import android.service.media.MediaBrowserService;
+import android.util.Log;
 
-import com.spuriouslabs.apps.autoplex.plex.utils.MenuItem;
+import com.spuriouslabs.apps.autoplex.plex.Player;
 import com.spuriouslabs.apps.autoplex.plex.PlexConnector;
+import com.spuriouslabs.apps.autoplex.plex.PlexMusicProvider;
 
-import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 /**
  * This class provides a MediaBrowser through a service. It exposes the media library to a browsing
@@ -69,29 +72,52 @@ import java.util.List;
  */
 public class AutoPlexMusicService extends MediaBrowserService
 {
+	private static final String TAG = AutoPlexMusicService.class.getSimpleName();
+	private static final long STOP_DELAY = TimeUnit.SECONDS.toMillis(30);
+	private static final int STOP_CMD = 0x7c48;
 
-	private MediaSession mSession;
+	private MediaSession media_session;
 	private PlexConnector connector;
+	private boolean service_started;
+
+	private Player player;
+	private PlexMusicProvider provider;
+
+	private Handler delayed_stop_handler = new Handler(new Handler.Callback(){
+		@Override
+		public boolean handleMessage(Message msg)
+		{
+			if (msg == null || msg.what != STOP_CMD)
+				return false;
+			if (player.isPlaying()) {
+				Log.d(TAG, "Stopping Service");
+				stopSelf();
+				service_started = false;
+			}
+			return false;
+		}
+	});
 
 	@Override
 	public void onCreate()
 	{
 		super.onCreate();
 
-		mSession = new MediaSession(this, "AutoPlexMusicService");
-		setSessionToken(mSession.getSessionToken());
-		mSession.setCallback(new MediaSessionCallback());
-		mSession.setFlags(MediaSession.FLAG_HANDLES_MEDIA_BUTTONS |
+		media_session = new MediaSession(this, "AutoPlexMusicService");
+		setSessionToken(media_session.getSessionToken());
+		media_session.setCallback(new MediaSessionCallback());
+		media_session.setFlags(MediaSession.FLAG_HANDLES_MEDIA_BUTTONS |
 				MediaSession.FLAG_HANDLES_TRANSPORT_CONTROLS);
 
 		connector = PlexConnector.getInstance(this);
-		//connector.prefetchMenuItems();
+		provider = new PlexMusicProvider(connector);
+		player = new Player(this, provider);
 	}
 
 	@Override
 	public void onDestroy()
 	{
-		mSession.release();
+		media_session.release();
 	}
 
 	@Override
@@ -108,9 +134,11 @@ public class AutoPlexMusicService extends MediaBrowserService
 
 	private final class MediaSessionCallback extends MediaSession.Callback
 	{
+		/*
 		@Override
 		public void onPlay()
 		{
+			Log.i("autoplex", "onPlay()");
 		}
 
 		@Override
@@ -121,13 +149,16 @@ public class AutoPlexMusicService extends MediaBrowserService
 		@Override
 		public void onSeekTo(long position)
 		{
-		}
+		}*/
 
 		@Override
 		public void onPlayFromMediaId(String mediaId, Bundle extras)
 		{
+			Log.i("autoplex", "onPlayFromMediaId("+mediaId+")");
+			connector.getMediaUri(mediaId);
 		}
 
+		/*
 		@Override
 		public void onPause()
 		{
@@ -147,10 +178,12 @@ public class AutoPlexMusicService extends MediaBrowserService
 		public void onSkipToPrevious()
 		{
 		}
+		*/
 
 		@Override
 		public void onCustomAction(String action, Bundle extras)
 		{
+			Log.i("autoplex", "invoked action: " + action);
 		}
 
 		@Override

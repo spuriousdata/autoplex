@@ -20,26 +20,10 @@ import java.util.List;
  * Created by omalleym on 7/15/2017.
  */
 
-public class MusicMenuParser
+public class MusicMenuParser extends XMLParser<List<MenuItem>>
 {
-	private final String ns = null;
-
-	public List<MenuItem> parse_menu(String xml) throws XmlPullParserException, IOException
-	{
-		InputStream in = new ByteArrayInputStream(xml.getBytes(StandardCharsets.UTF_8));
-		try {
-			XmlPullParser parser = Xml.newPullParser();
-			parser.setFeature(XmlPullParser.FEATURE_PROCESS_NAMESPACES, false);
-			parser.setInput(in, null);
-			parser.nextTag();
-			return parse_feed(parser);
-		} finally {
-			in.close();
-		}
-	}
-
 	@Nullable
-	private List<MenuItem> parse_feed(XmlPullParser parser) throws XmlPullParserException, IOException
+	protected List<MenuItem> parse_feed(XmlPullParser parser) throws XmlPullParserException, IOException
 	{
 		List<MenuItem> menu = new ArrayList<>();
 		int event_type = parser.getEventType();

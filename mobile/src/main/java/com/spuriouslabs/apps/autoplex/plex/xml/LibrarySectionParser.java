@@ -17,25 +17,10 @@ import java.nio.charset.StandardCharsets;
  * Created by omalleym on 7/18/17.
  */
 
-public class LibrarySectionParser {
-	private final String ns = null;
-
-	public MusicLibrary parse_library_sections(String xml) throws XmlPullParserException, IOException
-	{
-		InputStream in = new ByteArrayInputStream(xml.getBytes(StandardCharsets.UTF_8));
-		try {
-			XmlPullParser parser = Xml.newPullParser();
-			parser.setFeature(XmlPullParser.FEATURE_PROCESS_NAMESPACES, false);
-			parser.setInput(in, null);
-			parser.nextTag();
-			return parse_feed(parser);
-		} finally {
-			in.close();
-		}
-	}
-
+public class LibrarySectionParser extends XMLParser<MusicLibrary>
+{
 	@Nullable
-	private MusicLibrary parse_feed(XmlPullParser parser) throws XmlPullParserException, IOException
+	protected MusicLibrary parse_feed(XmlPullParser parser) throws XmlPullParserException, IOException
 	{
 		int event_type = parser.getEventType();
 

@@ -21,26 +21,10 @@ import java.util.List;
  * Created by omalleym on 7/15/2017.
  */
 
-public class ConnectionResourceParser
+public class ConnectionResourceParser extends XMLParser<PlexConnectionSet>
 {
-	private final String ns = null;
-
-	public PlexConnectionSet parse_connections(String xml) throws XmlPullParserException, IOException
-	{
-		InputStream in = new ByteArrayInputStream(xml.getBytes(StandardCharsets.UTF_8));
-		try {
-			XmlPullParser parser = Xml.newPullParser();
-			parser.setFeature(XmlPullParser.FEATURE_PROCESS_NAMESPACES, false);
-			parser.setInput(in, null);
-			parser.nextTag();
-			return parse_feed(parser);
-		} finally {
-			in.close();
-		}
-	}
-
 	@Nullable
-	private PlexConnectionSet parse_feed(XmlPullParser parser) throws XmlPullParserException, IOException
+	protected PlexConnectionSet parse_feed(XmlPullParser parser) throws XmlPullParserException, IOException
 	{
 		int event_type = parser.getEventType();
 		boolean in_server_device = false;

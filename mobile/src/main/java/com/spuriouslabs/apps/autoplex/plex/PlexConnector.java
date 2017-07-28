@@ -26,6 +26,7 @@ import com.spuriouslabs.apps.autoplex.plex.xml.MusicMenuParser;
 import org.xmlpull.v1.XmlPullParserException;
 
 import java.io.IOException;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -82,13 +83,13 @@ public class PlexConnector
 
 		Log.d("autoplex", "Making http request to " + url);
 
-		rq.add(new PlexTokenHttpRequest(Request.Method.GET, url, token, new Response.Listener<String>() {
+		addRequest(new PlexTokenHttpRequest(Request.Method.GET, url, token, new Response.Listener<String>() {
 			@Override
 			public void onResponse(String response)
 			{
 				LibrarySectionParser lsp = new LibrarySectionParser();
 				try {
-					music_library = lsp.parse_library_sections(response);
+					music_library = lsp.parse(response);
 					settings.edit()
 							.putInt("music_library_key", music_library.getId())
 							.putString("music_library_name", music_library.getName())
@@ -112,13 +113,13 @@ public class PlexConnector
 	{
 		String discovery_url = "https://plex.tv/api/resources?includeHttps=1&includeRelay=1&X-Plex-Token=" + token;
 
-		rq.add(new HttpRequest(Request.Method.GET, discovery_url, new Response.Listener<String>() {
+		addRequest(new HttpRequest(Request.Method.GET, discovery_url, new Response.Listener<String>() {
 			@Override
 			public void onResponse(String response)
 			{
 				ConnectionResourceParser crp = new ConnectionResourceParser();
 				try {
-					connections = crp.parse_connections(response);
+					connections = crp.parse(response);
 					settings.edit()
 							.putString("local_server_uri", connections.getLocalUri())
 							.putString("relay_server_uri", connections.getRelayUri())
@@ -140,8 +141,7 @@ public class PlexConnector
 
 	public List<MediaBrowser.MediaItem> getMenu(String parent)
 	{
-		//return plex_menu.getChildren(parent);
-		return new ArrayList<>();
+		return plex_menu.getMenu().get(parent);
 	}
 
 	public void prefetchMenuItems()
@@ -169,6 +169,26 @@ public class PlexConnector
 		return uri;
 	}
 
+	public void addRequest(HttpRequest r)
+	{
+		rq.add(r);
+	}
+
+	public String getMusicLibraryUrl()
+	{
+		return getMusicLibraryUrl("");
+	}
+
+	public String getMusicLibraryUrl(String append)
+	{
+		return getPreferredUri() + "/library/sections/" + music_library.getId() + append;
+	}
+
+	public String getToken()
+	{
+		return token;
+	}
+
 	public class PlexMenu
 	{
 		private Map<String, List<MediaBrowser.MediaItem>> menu;
@@ -187,21 +207,21 @@ public class PlexConnector
 		{
 			String menu_url;
 			if (parent == "root")
-				menu_url = getPreferredUri() + "/library/sections/" + music_library.getId();
+				menu_url = getMusicLibraryUrl();
 			else if (parent.charAt(0) != '/')
-				menu_url = getPreferredUri() + "/library/sections/" + music_library.getId() + "/" + parent;
+				menu_url = getMusicLibraryUrl("/" + parent);
 			else menu_url = getPreferredUri() + parent;
 
-			Log.w("autoplex", "Getting url: " + menu_url);
+			Log.d("autoplex", "Getting url: " + menu_url);
 
-			rq.add(new PlexTokenHttpRequest(Request.Method.GET, menu_url, token, new Response.Listener<String>() {
+			addRequest(new PlexTokenHttpRequest(Request.Method.GET, menu_url, token, new Response.Listener<String>() {
 				@Override
 				public void onResponse(String response) {
 					List<MediaBrowser.MediaItem> menu_list = new ArrayList<>();
 					MediaDescription.Builder menu_builder = new MediaDescription.Builder();
 
 					try {
-						for(MenuItem item : new MusicMenuParser().parse_menu(response)) {
+						for(MenuItem item : new MusicMenuParser().parse(response)) {
 							menu_builder.setTitle(item.getTitle()).setMediaId(item.getKey());
 							menu_list.add(new MediaBrowser.MediaItem(menu_builder.build(), item.getFlag()));
 							if (item.getFlag() == FLAG_BROWSABLE)
