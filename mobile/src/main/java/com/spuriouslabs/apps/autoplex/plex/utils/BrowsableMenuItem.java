@@ -2,8 +2,6 @@ package com.spuriouslabs.apps.autoplex.plex.utils;
 
 import android.support.annotation.IntDef;
 
-import java.util.List;
-
 import static android.media.browse.MediaBrowser.MediaItem.FLAG_BROWSABLE;
 import static android.media.browse.MediaBrowser.MediaItem.FLAG_PLAYABLE;
 
@@ -11,23 +9,23 @@ import static android.media.browse.MediaBrowser.MediaItem.FLAG_PLAYABLE;
  * Created by omalleym on 7/19/17.
  */
 
-public class MenuItem {
-	private final String title;
-	private final String key;
-	private final int flag;
-	private List<MenuItem> children;
+public class BrowsableMenuItem
+{
+	protected final String title;
+	protected final String key;
+	protected final String icon_uri;
 
 	@IntDef(flag=true, value = { FLAG_BROWSABLE, FLAG_PLAYABLE })
 	public @interface Flags {}
 
-	public MenuItem(final String title, final String key, @Flags int flag)
+	public BrowsableMenuItem(final String title, final String key, final String icon_uri)
 	{
 		this.title = title;
 		this.key = key;
-		this.flag = flag;
+		this.icon_uri = icon_uri;
 	}
 
-	public boolean equals(MenuItem other)
+	public boolean equals(BrowsableMenuItem other)
 	{
 		return (this.title.equals(other.title) && this.key.equals(other.key));
 	}
@@ -42,18 +40,13 @@ public class MenuItem {
 		return key;
 	}
 
+	public String getIconUri()
+	{
+		return icon_uri;
+	}
+
 	public @Flags int getFlag()
 	{
-		return flag;
-	}
-
-	public void addChild(MenuItem child)
-	{
-		children.add(child);
-	}
-
-	public List<MenuItem> getChildren()
-	{
-		return children;
+		return FLAG_BROWSABLE;
 	}
 }

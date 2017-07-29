@@ -140,7 +140,8 @@ public class MainActivity extends AppCompatActivity
 
 	public void fetchLibraryData(View view)
 	{
-		PlexConnector.getInstance(this).prefetchMenuItems();
+		//PlexConnector.getInstance(this).prefetchMenuItems();
+		return;
 	}
 
 	private void disableForm()

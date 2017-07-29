@@ -1,18 +1,14 @@
 package com.spuriouslabs.apps.autoplex.plex.xml;
 
-import android.media.browse.MediaBrowser;
 import android.support.annotation.Nullable;
-import android.util.Xml;
 
-import com.spuriouslabs.apps.autoplex.plex.utils.MenuItem;
+import com.spuriouslabs.apps.autoplex.plex.utils.BrowsableMenuItem;
+import com.spuriouslabs.apps.autoplex.plex.utils.PlayableMenuItem;
 
 import org.xmlpull.v1.XmlPullParser;
 import org.xmlpull.v1.XmlPullParserException;
 
-import java.io.ByteArrayInputStream;
 import java.io.IOException;
-import java.io.InputStream;
-import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -20,29 +16,14 @@ import java.util.List;
  * Created by omalleym on 7/15/2017.
  */
 
-public class MusicMenuParser
+public class MusicMenuParser extends XMLParser<List<BrowsableMenuItem>>
 {
-	private final String ns = null;
-
-	public List<MenuItem> parse_menu(String xml) throws XmlPullParserException, IOException
-	{
-		InputStream in = new ByteArrayInputStream(xml.getBytes(StandardCharsets.UTF_8));
-		try {
-			XmlPullParser parser = Xml.newPullParser();
-			parser.setFeature(XmlPullParser.FEATURE_PROCESS_NAMESPACES, false);
-			parser.setInput(in, null);
-			parser.nextTag();
-			return parse_feed(parser);
-		} finally {
-			in.close();
-		}
-	}
-
 	@Nullable
-	private List<MenuItem> parse_feed(XmlPullParser parser) throws XmlPullParserException, IOException
+	protected List<BrowsableMenuItem> parse_feed() throws XmlPullParserException, IOException
 	{
-		List<MenuItem> menu = new ArrayList<>();
+		List<BrowsableMenuItem> menu = new ArrayList<>();
 		int event_type = parser.getEventType();
+		String year = null;
 
 		parser.require(XmlPullParser.START_TAG, ns, "MediaContainer");
 		while (event_type != XmlPullParser.END_DOCUMENT) {
@@ -50,16 +31,34 @@ public class MusicMenuParser
 			switch (event_type) {
 				case XmlPullParser.START_TAG:
 					name = parser.getName();
-					if (name.equals("Directory")) {
-						menu.add(new MenuItem(
+
+					if (name.equals("MediaContainer")) {
+						year = parser.getAttributeValue(ns, "parentYear");
+					} else if (name.equals("Directory")) {
+						menu.add(new BrowsableMenuItem(
 								parser.getAttributeValue(ns, "title"),
 								parser.getAttributeValue(ns, "key"),
-								MediaBrowser.MediaItem.FLAG_BROWSABLE));
+								parser.getAttributeValue(ns, "thumb")
+						));
 					} else if (name.equals("Track")) {
-						menu.add(new MenuItem(
+						PlayableMenuItem pmi = new PlayableMenuItem(
 								parser.getAttributeValue(ns, "title"),
 								parser.getAttributeValue(ns, "key"),
-								MediaBrowser.MediaItem.FLAG_PLAYABLE));
+								parser.getAttributeValue(ns, "thumb"));
+						pmi.setDuration(Integer.parseInt(parser.getAttributeValue(ns, "duration")));
+						pmi.setAlbum(parser.getAttributeValue(ns, "parentTitle"));
+						pmi.setArtist(parser.getAttributeValue(ns, "grandparentTitle"));
+
+						nextTag("Media");
+						nextTag("Part");
+
+						pmi.setMediaUri(parser.getAttributeValue(ns, "key"));
+
+						if (year != null) {
+							pmi.setDate(year);
+							year = null;
+						}
+						menu.add(pmi);
 					}
 					break;
 			}
