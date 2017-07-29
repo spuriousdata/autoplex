@@ -20,7 +20,7 @@ import java.nio.charset.StandardCharsets;
 public class LibrarySectionParser extends XMLParser<MusicLibrary>
 {
 	@Nullable
-	protected MusicLibrary parse_feed(XmlPullParser parser) throws XmlPullParserException, IOException
+	protected MusicLibrary parse_feed() throws XmlPullParserException, IOException
 	{
 		int event_type = parser.getEventType();
 

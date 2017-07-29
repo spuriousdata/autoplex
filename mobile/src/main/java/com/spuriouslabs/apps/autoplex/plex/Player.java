@@ -10,6 +10,7 @@ import android.text.TextUtils;
 import android.util.Log;
 
 import com.spuriouslabs.apps.autoplex.AutoPlexMusicService;
+import com.spuriouslabs.apps.autoplex.plex.utils.PlayableMenuItem;
 
 import java.io.IOException;
 
@@ -29,7 +30,7 @@ public class Player implements AudioManager.OnAudioFocusChangeListener, OnComple
 {
 	private static final String TAG = Player.class.getSimpleName();
 
-	interface Callback {
+	public interface Callback {
 		void onCompletion();
 
 		void onPlaybackStatusChanged(int state);
@@ -104,11 +105,11 @@ public class Player implements AudioManager.OnAudioFocusChangeListener, OnComple
 		return media_player != null ? media_player.getCurrentPosition() : current_position;
 	}
 
-	public void play(MediaItem item)
+	public void play(PlayableMenuItem item)
 	{
 		play_on_focus_gain = true;
 		tryToGetAudioFocus();
-		String media_id = item.getMediaId();
+		String media_id = item.getKey();
 		boolean media_has_changed = !TextUtils.equals(media_id, current_media_id);
 		if (media_has_changed) {
 			state = 0;
@@ -121,9 +122,9 @@ public class Player implements AudioManager.OnAudioFocusChangeListener, OnComple
 		} else {
 			state = PlaybackState.STATE_STOPPED;
 			relaxResources(false); // release everything except MediaPlayer
-			MediaItem track = provider.getMusic(item.getMediaId());
+			PlayableMenuItem track = PlayableMenuItem.fromMediaMetadata(provider.getMusic(item.getKey()));
 
-			String source = track.getMediaId();
+			String source = provider.getUrlForMedia(track);
 			try {
 				createMediaPlayerIfNeeded();
 

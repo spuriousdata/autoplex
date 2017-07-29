@@ -24,7 +24,7 @@ import java.util.List;
 public class ConnectionResourceParser extends XMLParser<PlexConnectionSet>
 {
 	@Nullable
-	protected PlexConnectionSet parse_feed(XmlPullParser parser) throws XmlPullParserException, IOException
+	protected PlexConnectionSet parse_feed() throws XmlPullParserException, IOException
 	{
 		int event_type = parser.getEventType();
 		boolean in_server_device = false;

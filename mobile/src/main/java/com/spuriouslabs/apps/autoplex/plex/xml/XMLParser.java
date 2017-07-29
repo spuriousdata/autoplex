@@ -17,20 +17,37 @@ import java.nio.charset.StandardCharsets;
 abstract public class XMLParser<T>
 {
 	protected String ns = null;
+	protected XmlPullParser parser;
 
 	public T parse(String xml) throws XmlPullParserException, IOException
 	{
 		InputStream in = new ByteArrayInputStream(xml.getBytes(StandardCharsets.UTF_8));
 		try {
-			XmlPullParser parser = Xml.newPullParser();
+			parser = Xml.newPullParser();
 			parser.setFeature(XmlPullParser.FEATURE_PROCESS_NAMESPACES, false);
 			parser.setInput(in, null);
 			parser.nextTag();
-			return parse_feed(parser);
+			return parse_feed();
 		} finally {
 			in.close();
 		}
 	}
 
-	abstract protected T parse_feed(XmlPullParser parser) throws XmlPullParserException, IOException;
+	protected void nextTag() throws XmlPullParserException, IOException
+	{
+		nextTag(null);
+	}
+
+	protected void nextTag(String require) throws XmlPullParserException, IOException
+	{
+
+		while (parser.next() != XmlPullParser.START_TAG)
+			;
+
+		if (require != null)
+			parser.require(XmlPullParser.START_TAG, ns, require);
+
+	}
+
+	abstract protected T parse_feed() throws XmlPullParserException, IOException;
 }
