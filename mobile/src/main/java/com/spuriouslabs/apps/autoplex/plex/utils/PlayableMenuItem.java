@@ -49,9 +49,12 @@ public class PlayableMenuItem extends BrowsableMenuItem
 
 	public static PlayableMenuItem fromMediaDescription(MediaDescription m)
 	{
+		String icon_uri = null;
+		if (m.getIconUri() != null)
+			icon_uri = m.getIconUri().toString();
 		PlayableMenuItem p = new PlayableMenuItem(m.getTitle().toString(), m.getMediaId(),
-				m.getIconUri().toString());
-		p.setMediaUri(m.getMediaUri().toString());
+				icon_uri);
+		p.setMediaUri(m.getMediaId().toString());
 		return p;
 	}
 

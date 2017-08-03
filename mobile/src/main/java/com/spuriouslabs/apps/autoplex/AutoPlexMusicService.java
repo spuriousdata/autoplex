@@ -16,7 +16,6 @@ import android.service.media.MediaBrowserService;
 import android.support.v4.app.NotificationManagerCompat;
 import android.support.v4.media.session.MediaButtonReceiver;
 import android.support.v4.media.session.MediaSessionCompat;
-import android.support.v4.media.session.PlaybackStateCompat;
 import android.util.Log;
 
 import com.spuriouslabs.apps.autoplex.plex.Player;
@@ -96,7 +95,6 @@ public class AutoPlexMusicService extends MediaBrowserService
 	private static final int REQUEST_CODE = 99;
 
 	private MediaSession media_session;
-	private PlexConnector connector;
 	private boolean service_started;
 	private MediaSession.QueueItem current_media = null;
 	public NotificationManagerCompat notification_manager;
@@ -130,15 +128,14 @@ public class AutoPlexMusicService extends MediaBrowserService
 		media_session.setFlags(MediaSession.FLAG_HANDLES_MEDIA_BUTTONS |
 				MediaSession.FLAG_HANDLES_TRANSPORT_CONTROLS);
 
-		connector = PlexConnector.getInstance(this);
-		provider = new PlexMusicProvider(connector);
+
+		provider = new PlexMusicProvider(PlexConnector.getInstance(this));
 		player = new Player(this, provider);
 		player.setCallback(new Player.Callback() {
 			@Override
 			public void onCompletion()
 			{
 				handleStopRequest();
-
 			}
 
 			@Override
@@ -199,11 +196,11 @@ public class AutoPlexMusicService extends MediaBrowserService
 	{
 		Log.d(TAG, "onLoadChildren(" + parent_media_id + ")");
 
-		if (!provider.isInitialized()) {
+		if (!provider.hasMenuFor(parent_media_id)) {
 			// this lets us call result.sendResult from another thread
 			result.detach();
 
-			provider.retrieveMediaAsync(new PlexMusicProvider.Callback()
+			provider.retrieveMediaAsync(parent_media_id, new PlexMusicProvider.Callback()
 			{
 				@Override
 				public void onMusicCatalogReady(boolean success)
@@ -224,6 +221,8 @@ public class AutoPlexMusicService extends MediaBrowserService
 	private void loadChildren(String parent, final Result<List<MediaItem>> result)
 	{
 		List<MediaItem> ret;
+
+		Log.d(TAG, "loadChildren(" + parent + ", result");
 
 		if (parent != null)
 			ret = provider.getMenu(parent);

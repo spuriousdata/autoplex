@@ -1,5 +1,6 @@
 package com.spuriouslabs.apps.autoplex;
 
+import android.content.Intent;
 import android.support.design.widget.BaseTransientBottomBar;
 import android.support.design.widget.Snackbar;
 import android.support.v7.app.AppCompatActivity;
@@ -138,48 +139,33 @@ public class MainActivity extends AppCompatActivity
 		discoverMusicLibraryId(view);
 	}
 
-	public void fetchLibraryData(View view)
+	public void startCacheMetadataActivity(View view)
 	{
-		//PlexConnector.getInstance(this).prefetchMenuItems();
-		return;
+		startActivity(new Intent(this, MetadataCacheActivity.class));
 	}
 
-	private void disableForm()
+	private void enableForm(boolean enabled)
 	{
-		((Button)findViewById(R.id.discover_server_button)).setEnabled(false);
-		((EditText)findViewById(R.id.token_field)).setEnabled(false);
-		((EditText)findViewById(R.id.local_server_textbox)).setEnabled(false);
-		((EditText)findViewById(R.id.remote_server_textbox)).setEnabled(false);
-		((EditText)findViewById(R.id.relay_server_textbox)).setEnabled(false);
-		((CheckBox)findViewById(R.id.use_local_checkbox)).setEnabled(false);
-		((CheckBox)findViewById(R.id.use_relay_checkbox)).setEnabled(false);
-		((CheckBox)findViewById(R.id.use_remote_checkbox)).setEnabled(false);
-		((EditText)findViewById(R.id.music_library_id_textbox)).setEnabled(false);
-		((EditText)findViewById(R.id.music_library_name_textbox)).setEnabled(false);
-	}
-
-	private void enableForm()
-	{
-		((Button)findViewById(R.id.discover_server_button)).setEnabled(true);
-		((EditText)findViewById(R.id.token_field)).setEnabled(true);
-		((EditText)findViewById(R.id.local_server_textbox)).setEnabled(true);
-		((EditText)findViewById(R.id.remote_server_textbox)).setEnabled(true);
-		((EditText)findViewById(R.id.relay_server_textbox)).setEnabled(true);
-		((CheckBox)findViewById(R.id.use_local_checkbox)).setEnabled(true);
-		((CheckBox)findViewById(R.id.use_relay_checkbox)).setEnabled(true);
-		((CheckBox)findViewById(R.id.use_remote_checkbox)).setEnabled(true);
-		((EditText)findViewById(R.id.music_library_id_textbox)).setEnabled(true);
-		((EditText)findViewById(R.id.music_library_name_textbox)).setEnabled(true);
+		((Button)findViewById(R.id.discover_server_button)).setEnabled(enabled);
+		((EditText)findViewById(R.id.token_field)).setEnabled(enabled);
+		((EditText)findViewById(R.id.local_server_textbox)).setEnabled(enabled);
+		((EditText)findViewById(R.id.remote_server_textbox)).setEnabled(enabled);
+		((EditText)findViewById(R.id.relay_server_textbox)).setEnabled(enabled);
+		((CheckBox)findViewById(R.id.use_local_checkbox)).setEnabled(enabled);
+		((CheckBox)findViewById(R.id.use_relay_checkbox)).setEnabled(enabled);
+		((CheckBox)findViewById(R.id.use_remote_checkbox)).setEnabled(enabled);
+		((EditText)findViewById(R.id.music_library_id_textbox)).setEnabled(enabled);
+		((EditText)findViewById(R.id.music_library_name_textbox)).setEnabled(enabled);
 	}
 
 	private void showProgressBar()
 	{
-		disableForm();
+		enableForm(false);
 		((ProgressBar)findViewById(R.id.progressBar)).setVisibility(View.VISIBLE);
 	}
 
 	private void hideProgressBar() {
-		enableForm();
+		enableForm(true);
 		((ProgressBar) findViewById(R.id.progressBar)).setVisibility(View.INVISIBLE);
 	};
 }

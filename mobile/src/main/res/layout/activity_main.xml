@@ -8,18 +8,20 @@
     tools:context="com.spuriouslabs.apps.autoplex.MainActivity" >
 
 
-    <TextView
-        android:id="@+id/setup_label"
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="16dp"
-        android:text="@string/setup"
-        android:textAlignment="center"
-        app:layout_constraintTop_toTopOf="parent"
-        android:layout_marginEnd="16dp"
-        app:layout_constraintRight_toRightOf="parent"
-        android:layout_marginStart="16dp"
-        app:layout_constraintLeft_toLeftOf="parent" />
+	<TextView
+		android:id="@+id/setup_label"
+		android:layout_width="0dp"
+		android:layout_height="wrap_content"
+		android:layout_marginTop="16dp"
+		android:text="@string/setup"
+		android:textAlignment="center"
+		app:layout_constraintTop_toTopOf="parent"
+		android:layout_marginEnd="16dp"
+		app:layout_constraintRight_toRightOf="parent"
+		android:layout_marginStart="16dp"
+		app:layout_constraintLeft_toLeftOf="parent"
+		tools:layout_constraintRight_creator="1"
+		tools:layout_constraintLeft_creator="1"/>
 
     <TextView
         android:id="@+id/textView2"
@@ -36,7 +38,6 @@
 		android:id="@+id/token_field"
 		android:layout_width="wrap_content"
 		android:layout_height="wrap_content"
-		android:layout_marginEnd="0dp"
 		android:layout_marginStart="16dp"
 		android:ems="10"
 		android:inputType="text"
@@ -68,7 +69,8 @@
 		android:labelFor="@+id/local_server_textbox"
 		android:text="@string/local_server_label"
 		app:layout_constraintBaseline_toBaselineOf="@+id/local_server_textbox"
-		app:layout_constraintLeft_toLeftOf="parent"/>
+		app:layout_constraintLeft_toLeftOf="parent"
+		android:layout_marginStart="16dp"/>
 
 	<TextView
 		android:id="@+id/textView5"
@@ -78,7 +80,8 @@
 		android:labelFor="@+id/relay_server_textbox"
 		android:text="@string/relay_server_label"
 		app:layout_constraintBaseline_toBaselineOf="@+id/relay_server_textbox"
-		app:layout_constraintLeft_toLeftOf="parent"/>
+		app:layout_constraintLeft_toLeftOf="parent"
+		android:layout_marginStart="16dp"/>
 
 	<TextView
 		android:id="@+id/textView6"
@@ -88,7 +91,8 @@
 		android:labelFor="@+id/remote_server_textbox"
 		android:text="@string/remote_server_label"
 		app:layout_constraintBaseline_toBaselineOf="@+id/remote_server_textbox"
-		app:layout_constraintLeft_toLeftOf="parent"/>
+		app:layout_constraintLeft_toLeftOf="parent"
+		android:layout_marginStart="16dp"/>
 
 	<EditText
 		android:id="@+id/local_server_textbox"
@@ -97,9 +101,7 @@
 		android:ems="10"
 		android:inputType="text"
 		app:layout_constraintRight_toLeftOf="@+id/use_local_checkbox"
-		android:layout_marginRight="0dp"
 		app:layout_constraintLeft_toRightOf="@+id/textView3"
-		android:layout_marginLeft="0dp"
 		android:layout_marginTop="16dp"
 		app:layout_constraintTop_toBottomOf="@+id/discover_server_button"/>
 
@@ -112,9 +114,8 @@
 		android:layout_marginTop="16dp"
 		app:layout_constraintTop_toBottomOf="@+id/local_server_textbox"
 		app:layout_constraintRight_toLeftOf="@+id/use_relay_checkbox"
-		android:layout_marginRight="0dp"
 		app:layout_constraintLeft_toRightOf="@+id/textView5"
-		android:layout_marginLeft="0dp"/>
+		/>
 
 	<EditText
 		android:id="@+id/remote_server_textbox"
@@ -123,11 +124,9 @@
 		android:ems="10"
 		android:inputType="text"
 		app:layout_constraintLeft_toRightOf="@+id/textView6"
-		android:layout_marginLeft="0dp"
 		android:layout_marginTop="16dp"
 		app:layout_constraintTop_toBottomOf="@+id/relay_server_textbox"
 		app:layout_constraintRight_toLeftOf="@+id/use_remote_checkbox"
-		android:layout_marginRight="0dp"
 		app:layout_constraintHorizontal_bias="0.403"/>
 
 	<CheckBox
@@ -138,7 +137,8 @@
 		android:onClick="setPreferredServer"
 		android:text="@string/use_label"
 		app:layout_constraintBaseline_toBaselineOf="@+id/local_server_textbox"
-		app:layout_constraintRight_toRightOf="parent"/>
+		app:layout_constraintRight_toRightOf="parent"
+		android:layout_marginEnd="16dp"/>
 
 	<CheckBox
 		android:id="@+id/use_relay_checkbox"
@@ -148,7 +148,8 @@
 		android:onClick="setPreferredServer"
 		android:text="@string/use_label"
 		app:layout_constraintBaseline_toBaselineOf="@+id/relay_server_textbox"
-		app:layout_constraintRight_toRightOf="parent"/>
+		app:layout_constraintRight_toRightOf="parent"
+		android:layout_marginEnd="15dp"/>
 
 	<CheckBox
 		android:id="@+id/use_remote_checkbox"
@@ -158,22 +159,23 @@
 		android:onClick="setPreferredServer"
 		android:text="@string/use_label"
 		app:layout_constraintBaseline_toBaselineOf="@+id/remote_server_textbox"
-		app:layout_constraintRight_toRightOf="parent"/>
+		app:layout_constraintRight_toRightOf="parent"
+		android:layout_marginEnd="16dp"/>
 
 	<ProgressBar
 		android:id="@+id/progressBar"
 		style="?android:attr/progressBarStyle"
 		android:layout_width="wrap_content"
 		android:layout_height="wrap_content"
-		android:layout_marginBottom="8dp"
-		android:layout_marginLeft="8dp"
-		android:layout_marginRight="8dp"
-		android:layout_marginTop="8dp"
 		android:visibility="invisible"
 		app:layout_constraintBottom_toBottomOf="parent"
 		app:layout_constraintLeft_toLeftOf="parent"
 		app:layout_constraintRight_toRightOf="parent"
-		app:layout_constraintTop_toTopOf="parent"/>
+		app:layout_constraintTop_toTopOf="parent"
+		tools:layout_constraintTop_creator="1"
+		tools:layout_constraintRight_creator="1"
+		tools:layout_constraintBottom_creator="1"
+		tools:layout_constraintLeft_creator="1"/>
 
 	<TextView
 		android:id="@+id/textView"
@@ -185,7 +187,11 @@
 		android:text="@string/music_library_name_label"
 		app:layout_constraintBaseline_toBaselineOf="@+id/music_library_name_textbox"
 		app:layout_constraintLeft_toLeftOf="parent"
-		app:layout_constraintRight_toLeftOf="@+id/music_library_name_textbox"/>
+		app:layout_constraintRight_toLeftOf="@+id/music_library_name_textbox"
+		android:layout_marginStart="16dp"
+		android:layout_marginEnd="16dp"
+		tools:layout_constraintRight_creator="1"
+		tools:layout_constraintLeft_creator="1"/>
 
 	<EditText
 		android:id="@+id/music_library_name_textbox"
@@ -196,7 +202,8 @@
 		android:layout_marginTop="16dp"
 		app:layout_constraintTop_toBottomOf="@+id/remote_server_textbox"
 		android:layout_marginRight="16dp"
-		app:layout_constraintRight_toRightOf="parent"/>
+		app:layout_constraintRight_toRightOf="parent"
+		android:layout_marginEnd="16dp"/>
 
 	<TextView
 		android:id="@+id/textView4"
@@ -209,7 +216,11 @@
 		app:layout_constraintBaseline_toBaselineOf="@+id/music_library_id_textbox"
 		app:layout_constraintHorizontal_bias="0.0"
 		app:layout_constraintLeft_toLeftOf="parent"
-		app:layout_constraintRight_toLeftOf="@+id/music_library_id_textbox"/>
+		app:layout_constraintRight_toLeftOf="@+id/music_library_id_textbox"
+		android:layout_marginStart="16dp"
+		android:layout_marginEnd="16dp"
+		tools:layout_constraintRight_creator="1"
+		tools:layout_constraintLeft_creator="1"/>
 
 	<EditText
 		android:id="@+id/music_library_id_textbox"
@@ -220,17 +231,18 @@
 		android:layout_marginTop="16dp"
 		app:layout_constraintTop_toBottomOf="@+id/music_library_name_textbox"
 		android:layout_marginRight="16dp"
-		app:layout_constraintRight_toRightOf="parent"/>
+		app:layout_constraintRight_toRightOf="parent"
+		android:layout_marginEnd="16dp"/>
 
 	<Button
 		android:id="@+id/fetch_library_data_button"
 		android:layout_width="wrap_content"
 		android:layout_height="wrap_content"
-		android:layout_marginLeft="0dp"
+		android:layout_marginEnd="16dp"
 		android:layout_marginRight="16dp"
 		android:layout_marginTop="16dp"
-		android:onClick="fetchLibraryData"
-		android:text="Fetch Library Data"
+		android:onClick="startCacheMetadataActivity"
+		android:text="Next"
 		app:layout_constraintHorizontal_bias="1.0"
 		app:layout_constraintLeft_toLeftOf="parent"
 		app:layout_constraintRight_toRightOf="parent"

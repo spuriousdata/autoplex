@@ -2,7 +2,6 @@ package com.spuriouslabs.apps.autoplex.plex;
 
 import android.media.MediaDescription;
 import android.media.MediaMetadata;
-import android.media.browse.MediaBrowser;
 import android.media.browse.MediaBrowser.MediaItem;
 import android.os.AsyncTask;
 import android.util.Log;
@@ -35,8 +34,6 @@ import static android.media.MediaMetadata.METADATA_KEY_MEDIA_URI;
 import static android.media.MediaMetadata.METADATA_KEY_NUM_TRACKS;
 import static android.media.MediaMetadata.METADATA_KEY_TITLE;
 import static android.media.MediaMetadata.METADATA_KEY_TRACK_NUMBER;
-
-import static android.media.browse.MediaBrowser.MediaItem.FLAG_BROWSABLE;
 import static android.media.browse.MediaBrowser.MediaItem.FLAG_PLAYABLE;
 
 /**
@@ -45,9 +42,9 @@ import static android.media.browse.MediaBrowser.MediaItem.FLAG_PLAYABLE;
  * Lot's of this was copied from https://github.com/googlesamples/android-MediaBrowserService/blob/master/Application/src/main/java/com/example/android/mediabrowserservice/model/MusicProvider.java
  */
 
-public class PlexMusicProvider
+public class AutoPlexMusicProvider
 {
-	private static final String TAG = PlexMusicProvider.class.getSimpleName();
+	private static final String TAG = AutoPlexMusicProvider.class.getSimpleName();
 
 	public static final String MEDIA_ID_ROOT = "__ROOT__";
 
@@ -66,7 +63,7 @@ public class PlexMusicProvider
 		void onMusicCatalogReady(boolean success);
 	}
 
-	public PlexMusicProvider(PlexConnector connector) {
+	public AutoPlexMusicProvider(PlexConnector connector) {
 		music_list_by_id = new LinkedHashMap<>();
 		tracks_by_id = new LinkedHashMap<>();
 		this.connector = connector;
@@ -84,7 +81,7 @@ public class PlexMusicProvider
 
 		for (BrowsableMenuItem item : music_list_by_id.get(parent)) {
 			menu_builder.setTitle(item.getTitle()).setMediaId(item.getKey());
-			menu.add(new MediaBrowser.MediaItem(menu_builder.build(), item.getFlag()));
+			menu.add(new MediaItem(menu_builder.build(), item.getFlag()));
 		}
 
 		return menu;
