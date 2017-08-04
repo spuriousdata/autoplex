@@ -27,7 +27,6 @@ import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
-import static android.media.MediaMetadata.METADATA_KEY_MEDIA_ID;
 import static com.spuriouslabs.apps.autoplex.plex.PlexMusicProvider.MEDIA_ID_ROOT;
 
 /**

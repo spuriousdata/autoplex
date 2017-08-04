@@ -154,7 +154,7 @@ public class PlexMusicProvider
 	{
 		Log.d(TAG, "retrieveMediaAsync called");
 		if (hasMenuFor(parent)) {
-			// alredy got this, so call the callback and return
+			// already got this, so call the callback and return
 			callback.onMusicCatalogReady(true);
 			return;
 		}
