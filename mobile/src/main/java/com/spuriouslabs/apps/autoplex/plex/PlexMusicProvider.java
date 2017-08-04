@@ -48,16 +48,13 @@ import static android.media.browse.MediaBrowser.MediaItem.FLAG_PLAYABLE;
 public class PlexMusicProvider
 {
 	private static final String TAG = PlexMusicProvider.class.getSimpleName();
-
 	public static final String MEDIA_ID_ROOT = "__ROOT__";
-
+	private static PlexMusicProvider instance = null;
 	private final PlexConnector connector;
 
 	// Categorized caches for music track data:
 	private final LinkedHashMap<String, List<BrowsableMenuItem>> music_list_by_id;
 	private final LinkedHashMap<String, PlayableMenuItem> tracks_by_id;
-
-	private volatile Counter request_counter = new Counter();
 
 	/**
 	 * Callback used by MusicService.
@@ -66,10 +63,17 @@ public class PlexMusicProvider
 		void onMusicCatalogReady(boolean success);
 	}
 
-	public PlexMusicProvider(PlexConnector connector) {
+	private PlexMusicProvider(PlexConnector connector) {
 		music_list_by_id = new LinkedHashMap<>();
 		tracks_by_id = new LinkedHashMap<>();
 		this.connector = connector;
+	}
+
+	public static PlexMusicProvider get_instance(PlexConnector connector)
+	{
+		if (instance == null)
+			instance = new PlexMusicProvider(connector);
+		return instance;
 	}
 
 	public List<MediaItem> getMenu(String parent) {
@@ -90,7 +94,7 @@ public class PlexMusicProvider
 		return menu;
 	}
 
-	public boolean hasMenuFor(String parent)
+	public synchronized boolean hasMenuFor(String parent)
 	{
 		if (music_list_by_id.isEmpty() || !music_list_by_id.containsKey(parent))
 			return false;
@@ -107,7 +111,8 @@ public class PlexMusicProvider
 	 *
 	 * @param music_id The unique music ID.
 	 */
-	public MediaMetadata getMusic(String music_id) {
+	public MediaMetadata getMusic(String music_id)
+	{
 		PlayableMenuItem track;
 		if (tracks_by_id.containsKey(music_id))
 			track = tracks_by_id.get(music_id);
@@ -133,7 +138,8 @@ public class PlexMusicProvider
 	 * @param music_id
 	 * @param metadata
 	 */
-	public synchronized void updateMusic(String music_id, MediaMetadata metadata) {
+	public synchronized void updateMusic(String music_id, MediaMetadata metadata)
+	{
 		MediaMetadata track = getMusic(music_id);
 		if (track != null) {
 			tracks_by_id.put(music_id, PlayableMenuItem.fromMediaMetadata(metadata));
@@ -144,7 +150,8 @@ public class PlexMusicProvider
 	 * Get the list of music tracks from a server and caches the track information
 	 * for future reference, keying tracks by musicId and grouping by genre.
 	 */
-	public void retrieveMediaAsync(final String parent, final Callback callback) {
+	public void retrieveMediaAsync(final String parent, final Callback callback, final boolean recurse)
+	{
 		Log.d(TAG, "retrieveMediaAsync called");
 		if (hasMenuFor(parent)) {
 			// alredy got this, so call the callback and return
@@ -156,26 +163,25 @@ public class PlexMusicProvider
 		new AsyncTask<Void, Void, String>() {
 			@Override
 			protected String doInBackground(Void... params) {
-				retrieveMedia(parent);
-				return parent;
-			}
-
-			@Override
-			protected void onPostExecute(String parent) {
-				if (callback != null) {
-					callback.onMusicCatalogReady(hasMenuFor(parent));
-				}
+				retrieveMedia(parent, recurse, callback);
+				return "";
 			}
 		}.execute();
 	}
 
-	private synchronized void retrieveMedia(final String parent) {
+	public void retrieveMediaAsync(final String parent, final Callback callback)
+	{
+		retrieveMediaAsync(parent, callback, false);
+	}
+
+	private synchronized void retrieveMedia(final String parent, final boolean recurse, final Callback callback)
+	{
 
 		Log.d(TAG, "retrieveMedia(" + parent + ")");
 
 		if (!hasMenuFor(parent)) {
 
-			String menu_url;
+			final String menu_url;
 			if (parent.equals(MEDIA_ID_ROOT))
 				menu_url = connector.getMusicLibraryUrl();
 			else if (parent.charAt(0) != '/')
@@ -196,22 +202,24 @@ public class PlexMusicProvider
 
 							if (item.getFlag() == FLAG_PLAYABLE)
 								tracks_by_id.put(item.getKey(), (PlayableMenuItem)item);
-							/*
-							if (item.getFlag() == FLAG_BROWSABLE)
-								retrieveMedia(item.getKey());
-							else if (item.getFlag() == FLAG_PLAYABLE)
-								tracks_by_id.put(item.getKey(), (PlayableMenuItem)item);
-							*/
+							else if (item.getFlag() == FLAG_BROWSABLE && recurse)
+								retrieveMedia(item.getKey(), recurse, callback);
+
 						}
 						music_list_by_id.put(parent, menu_list);
 					} catch (XmlPullParserException | IOException e) {
 						e.printStackTrace();
 					}
+
+					Log.d(TAG, "Finished fetching url: " + menu_url);
+					callback.onMusicCatalogReady(true);
 				}
 			}, new Response.ErrorListener() {
 				@Override
 				public void onErrorResponse(VolleyError error) {
+					Log.e(TAG, "Error fetching url: " + menu_url);
 					error.printStackTrace();
+					callback.onMusicCatalogReady(false);
 				}
 			}));
 		}

@@ -15,6 +15,7 @@
 	<string name="use_label">Use</string>
 	<string name="label_pause">Pause</string>
 	<string name="label_play">Play</string>
+	<string name="all_artists_menu_key">all</string>
 	<string name="unknown_error">An unknown error has occurred.</string>
 	<string name="relay_warning">Warning: Relay servers have bandwidth capped to 2mpbs. Don\'t use them unless you have to.</string>
 </resources>

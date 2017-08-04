@@ -129,7 +129,7 @@ public class AutoPlexMusicService extends MediaBrowserService
 				MediaSession.FLAG_HANDLES_TRANSPORT_CONTROLS);
 
 
-		provider = new PlexMusicProvider(PlexConnector.getInstance(this));
+		provider = PlexMusicProvider.get_instance(PlexConnector.getInstance(this));
 		player = new Player(this, provider);
 		player.setCallback(new Player.Callback() {
 			@Override
