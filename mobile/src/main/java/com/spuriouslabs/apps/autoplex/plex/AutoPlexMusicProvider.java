@@ -4,11 +4,14 @@ import android.media.MediaDescription;
 import android.media.MediaMetadata;
 import android.media.browse.MediaBrowser.MediaItem;
 import android.os.AsyncTask;
+import android.telecom.Call;
 import android.util.Log;
+import android.view.MenuItem;
 
 import com.android.volley.Request;
 import com.android.volley.Response;
 import com.android.volley.VolleyError;
+import com.spuriouslabs.apps.autoplex.AutoPlexMusicService;
 import com.spuriouslabs.apps.autoplex.http.PlexTokenHttpRequest;
 import com.spuriouslabs.apps.autoplex.plex.utils.BrowsableMenuItem;
 import com.spuriouslabs.apps.autoplex.plex.utils.Counter;
@@ -49,6 +52,7 @@ public class AutoPlexMusicProvider
 	public static final String MEDIA_ID_ROOT = "__ROOT__";
 
 	private final PlexConnector connector;
+	private static AutoPlexMusicProvider instance;
 
 	// Categorized caches for music track data:
 	private final LinkedHashMap<String, List<BrowsableMenuItem>> music_list_by_id;
@@ -63,28 +67,27 @@ public class AutoPlexMusicProvider
 		void onMusicCatalogReady(boolean success);
 	}
 
-	public AutoPlexMusicProvider(PlexConnector connector) {
+	private AutoPlexMusicProvider(PlexConnector connector) {
 		music_list_by_id = new LinkedHashMap<>();
 		tracks_by_id = new LinkedHashMap<>();
 		this.connector = connector;
 	}
 
-	public List<MediaItem> getMenu(String parent) {
+	public static AutoPlexMusicProvider get_instance(PlexConnector connector)
+	{
+		if (instance == null)
+			instance = new AutoPlexMusicProvider(connector);
+		return instance;
+	}
+
+	public List<BrowsableMenuItem> getMenu(String parent) {
 
 		Log.d(TAG, "getMenu(" + parent + ")");
 
 		if (!hasMenuFor(parent))
 			return Collections.emptyList();
 
-		List<MediaItem> menu = new ArrayList<>();
-		MediaDescription.Builder menu_builder = new MediaDescription.Builder();
-
-		for (BrowsableMenuItem item : music_list_by_id.get(parent)) {
-			menu_builder.setTitle(item.getTitle()).setMediaId(item.getKey());
-			menu.add(new MediaItem(menu_builder.build(), item.getFlag()));
-		}
-
-		return menu;
+		return music_list_by_id.get(parent);
 	}
 
 	public boolean hasMenuFor(String parent)
@@ -104,37 +107,8 @@ public class AutoPlexMusicProvider
 	 *
 	 * @param music_id The unique music ID.
 	 */
-	public MediaMetadata getMusic(String music_id) {
-		PlayableMenuItem track;
-		if (tracks_by_id.containsKey(music_id))
-			track = tracks_by_id.get(music_id);
-		else return null;
-
-		return new MediaMetadata.Builder()
-				.putString(METADATA_KEY_MEDIA_ID, track.getKey())
-				.putString(METADATA_KEY_MEDIA_URI, track.getMediaUri())
-				.putString(METADATA_KEY_ALBUM, track.getAlbum())
-				.putString(METADATA_KEY_ARTIST, track.getArtist())
-				.putString(METADATA_KEY_GENRE, track.getGenre())
-				.putString(METADATA_KEY_ALBUM_ART_URI, track.getAlbumArtUri())
-				.putString(METADATA_KEY_TITLE, track.getTitle())
-				.putString(METADATA_KEY_DISPLAY_ICON_URI, track.getIconUri())
-				.putLong(METADATA_KEY_DURATION, track.getDuration())
-				.putLong(METADATA_KEY_TRACK_NUMBER, track.getTrackNumber())
-				.putLong(METADATA_KEY_NUM_TRACKS, track.getNumTracks())
-				.build();
-	}
-
-	/**
-	 * I have no idea under what circumstances this would be called. What would be doing the updating?
-	 * @param music_id
-	 * @param metadata
-	 */
-	public synchronized void updateMusic(String music_id, MediaMetadata metadata) {
-		MediaMetadata track = getMusic(music_id);
-		if (track != null) {
-			tracks_by_id.put(music_id, PlayableMenuItem.fromMediaMetadata(metadata));
-		}
+	public PlayableMenuItem getMusic(String music_id) {
+		return tracks_by_id.get(music_id);
 	}
 
 	/**
@@ -153,20 +127,13 @@ public class AutoPlexMusicProvider
 		new AsyncTask<Void, Void, String>() {
 			@Override
 			protected String doInBackground(Void... params) {
-				retrieveMedia(parent);
+				retrieveMedia(parent, callback);
 				return parent;
-			}
-
-			@Override
-			protected void onPostExecute(String parent) {
-				if (callback != null) {
-					callback.onMusicCatalogReady(hasMenuFor(parent));
-				}
 			}
 		}.execute();
 	}
 
-	private synchronized void retrieveMedia(final String parent) {
+	private synchronized void retrieveMedia(final String parent, final Callback callback) {
 
 		Log.d(TAG, "retrieveMedia(" + parent + ")");
 
@@ -191,18 +158,14 @@ public class AutoPlexMusicProvider
 						for(BrowsableMenuItem item : new MusicMenuParser().parse(response)) {
 							menu_list.add(item);
 
-							if (item.getFlag() == FLAG_PLAYABLE)
-								tracks_by_id.put(item.getKey(), (PlayableMenuItem)item);
-							/*
-							if (item.getFlag() == FLAG_BROWSABLE)
-								retrieveMedia(item.getKey());
-							else if (item.getFlag() == FLAG_PLAYABLE)
-								tracks_by_id.put(item.getKey(), (PlayableMenuItem)item);
-							*/
+							if (item.getFlags() == FLAG_PLAYABLE)
+								tracks_by_id.put(item.getMediaId(), (PlayableMenuItem)item);
 						}
 						music_list_by_id.put(parent, menu_list);
+						callback.onMusicCatalogReady(true);
 					} catch (XmlPullParserException | IOException e) {
 						e.printStackTrace();
+						callback.onMusicCatalogReady(false);
 					}
 				}
 			}, new Response.ErrorListener() {
