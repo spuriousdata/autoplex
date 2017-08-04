@@ -79,7 +79,7 @@ public class MainActivity extends AppCompatActivity
 
 		showProgressBar();
 
-		PlexConnector plex = PlexConnector.getInstance(this);
+		PlexConnector plex = PlexConnector.getInstance(getApplicationContext());
 		plex.discoverPlexConnections(new PlexCallback<PlexConnectionSet>() {
 			@Override
 			public void callback(PlexConnectionSet param) {
@@ -97,7 +97,7 @@ public class MainActivity extends AppCompatActivity
 
 	private void discoverMusicLibraryId(View view)
 	{
-		PlexConnector plex = PlexConnector.getInstance(this);
+		PlexConnector plex = PlexConnector.getInstance(getApplicationContext());
 		SharedPreferences settings = getSharedPreferences(this.getString(R.string.settings_name), MODE_PRIVATE);
 		String uri = plex.getPreferredUri();
 
@@ -137,11 +137,6 @@ public class MainActivity extends AppCompatActivity
 		}
 
 		discoverMusicLibraryId(view);
-	}
-
-	public void startCacheMetadataActivity(View view)
-	{
-		startActivity(new Intent(this, MetadataCacheActivity.class));
 	}
 
 	private void enableForm(boolean enabled)

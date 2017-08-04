@@ -22,61 +22,33 @@ import static android.media.browse.MediaBrowser.MediaItem.FLAG_PLAYABLE;
 public class PlayableMenuItem extends BrowsableMenuItem
 {
 	private String media_uri;
-	private String album;
-	private String artist;
-	private long duration_ms;
-	private String genre;
-	private String album_art_uri;
-	private int track_number;
-	private int num_tracks;
 	private String date;
-
-	public static PlayableMenuItem fromMediaMetadata(MediaMetadata m)
-	{
-		PlayableMenuItem p = new PlayableMenuItem(m.getString(METADATA_KEY_TITLE),
-				m.getString(METADATA_KEY_MEDIA_ID), m.getString(METADATA_KEY_DISPLAY_ICON_URI));
-
-		p.setAlbum(m.getString(METADATA_KEY_ALBUM));
-		p.setArtist(m.getString(METADATA_KEY_ARTIST));
-		p.setGenre(m.getString(METADATA_KEY_GENRE));
-		p.setAlbumArtUri(m.getString(METADATA_KEY_ALBUM_ART_URI));
-		p.setDuration(m.getLong(METADATA_KEY_DURATION));
-		p.setTrackNumber((int)m.getLong(METADATA_KEY_TRACK_NUMBER));
-		p.setNumTracks((int)m.getLong(METADATA_KEY_NUM_TRACKS));
-
-		return p;
-	}
-
-	public static PlayableMenuItem fromMediaDescription(MediaDescription m)
-	{
-		String icon_uri = null;
-		if (m.getIconUri() != null)
-			icon_uri = m.getIconUri().toString();
-		PlayableMenuItem p = new PlayableMenuItem(m.getTitle().toString(), m.getMediaId(),
-				icon_uri);
-		p.setMediaUri(m.getMediaId().toString());
-		return p;
-	}
-
-	public PlayableMenuItem(final String title, final String key, final String icon_uri, String media_uri, String album,
-							String artist, long duration_ms, String genre, String album_art_uri,
-							int track_number, int num_tracks, String date)
-	{
-		super(title, key, icon_uri);
-		this.media_uri = media_uri;
-		this.album = album;
-		this.album_art_uri = album_art_uri;
-		this.artist = artist;
-		this.duration_ms = duration_ms;
-		this.genre = genre;
-		this.track_number = track_number;
-		this.num_tracks = num_tracks;
-		this.date = date;
-	}
+	private MediaMetadata metadata;
+	private MediaMetadata.Builder metadata_builder = new MediaMetadata.Builder();
 
 	public PlayableMenuItem(final String title, final String key, final String icon_uri)
 	{
-		super(title, key, icon_uri);
+		super(title, key, icon_uri, FLAG_PLAYABLE);
+		metadata_builder.putString(METADATA_KEY_MEDIA_ID, key);
+		metadata_builder.putString(METADATA_KEY_TITLE, title);
+		metadata_builder.putString(METADATA_KEY_DISPLAY_ICON_URI, icon_uri);
+		metadata = metadata_builder.build();
+	}
+
+	public String getKey()
+	{
+		return getMediaId();
+	}
+
+	public void setMetadata(MediaMetadata m)
+	{
+		metadata = m;
+		metadata_builder = new MediaMetadata.Builder(m);
+	}
+
+	public MediaMetadata getMetadata()
+	{
+		return metadata;
 	}
 
 	public String getDate()
@@ -101,77 +73,83 @@ public class PlayableMenuItem extends BrowsableMenuItem
 
 	public String getAlbum()
 	{
-		return album;
+		return metadata.getString(METADATA_KEY_ALBUM);
+	}
+
+	private void putString(String key, String value)
+	{
+		metadata_builder.putString(key, value);
+		metadata = metadata_builder.build();
+	}
+
+	private void putLong(String key, long value)
+	{
+		metadata_builder.putLong(key, value);
+		metadata = metadata_builder.build();
 	}
 
 	public void setAlbum(String album)
 	{
-		this.album = album;
+		putString(METADATA_KEY_ALBUM, album);
 	}
 
 	public String getArtist()
 	{
-		return artist;
+		return metadata.getString(METADATA_KEY_ARTIST);
 	}
 
 	public void setArtist(String artist)
 	{
-		this.artist = artist;
+		putString(METADATA_KEY_ARTIST, artist);
 	}
 
 	public long getDuration()
 	{
-		return duration_ms;
+		return metadata.getLong(METADATA_KEY_DURATION);
 	}
 
 	public void setDuration(long duration_ms)
 	{
-		this.duration_ms = duration_ms;
+		putLong(METADATA_KEY_DURATION, duration_ms);
 	}
 
 	public String getGenre()
 	{
-		return genre;
+		return metadata.getString(METADATA_KEY_GENRE);
 	}
 
 	public void setGenre(String genre)
 	{
-		this.genre = genre;
+		putString(METADATA_KEY_GENRE, genre);
 	}
 
 	public String getAlbumArtUri()
 	{
-		return album_art_uri;
+		return metadata.getString(METADATA_KEY_ALBUM_ART_URI);
 	}
 
 	public void setAlbumArtUri(String album_art_uri)
 	{
-		this.album_art_uri = album_art_uri;
+		putString(METADATA_KEY_ALBUM_ART_URI, album_art_uri);
 	}
 
-	public int getTrackNumber()
+	public long getTrackNumber()
 	{
-		return track_number;
+		return metadata.getLong(METADATA_KEY_TRACK_NUMBER);
 	}
 
 	public void setTrackNumber(int track_number)
 	{
-		this.track_number = track_number;
+		putLong(METADATA_KEY_TRACK_NUMBER, track_number);
 	}
 
-	public int getNumTracks()
+	public long getNumTracks()
 	{
-		return num_tracks;
+		return metadata.getLong(METADATA_KEY_NUM_TRACKS);
 	}
 
 	public void setNumTracks(int num_tracks)
 	{
-		this.num_tracks = num_tracks;
-	}
-
-	@Override
-	public @Flags int getFlag()
-	{
-		return FLAG_PLAYABLE;
+		putLong(METADATA_KEY_NUM_TRACKS, num_tracks);
 	}
 }

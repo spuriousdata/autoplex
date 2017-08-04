@@ -4,7 +4,6 @@ import android.app.Notification;
 import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
-import android.media.MediaMetadata;
 import android.media.browse.MediaBrowser.MediaItem;
 import android.media.session.MediaSession;
 import android.media.session.PlaybackState;
@@ -13,21 +12,38 @@ import android.os.Handler;
 import android.os.Message;
 import android.os.SystemClock;
 import android.service.media.MediaBrowserService;
+import android.support.annotation.IntDef;
+import android.support.annotation.Nullable;
 import android.support.v4.app.NotificationManagerCompat;
 import android.support.v4.media.session.MediaButtonReceiver;
 import android.support.v4.media.session.MediaSessionCompat;
+import android.support.v4.media.session.PlaybackStateCompat;
 import android.util.Log;
 
+import com.spuriouslabs.apps.autoplex.plex.AutoPlexMusicProvider;
 import com.spuriouslabs.apps.autoplex.plex.Player;
 import com.spuriouslabs.apps.autoplex.plex.PlexConnector;
-import com.spuriouslabs.apps.autoplex.plex.PlexMusicProvider;
 import com.spuriouslabs.apps.autoplex.plex.utils.PlayableMenuItem;
 
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
 import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
-import static com.spuriouslabs.apps.autoplex.plex.PlexMusicProvider.MEDIA_ID_ROOT;
+import static android.media.session.PlaybackState.STATE_BUFFERING;
+import static android.media.session.PlaybackState.STATE_CONNECTING;
+import static android.media.session.PlaybackState.STATE_ERROR;
+import static android.media.session.PlaybackState.STATE_FAST_FORWARDING;
+import static android.media.session.PlaybackState.STATE_NONE;
+import static android.media.session.PlaybackState.STATE_PAUSED;
+import static android.media.session.PlaybackState.STATE_PLAYING;
+import static android.media.session.PlaybackState.STATE_REWINDING;
+import static android.media.session.PlaybackState.STATE_SKIPPING_TO_NEXT;
+import static android.media.session.PlaybackState.STATE_SKIPPING_TO_PREVIOUS;
+import static android.media.session.PlaybackState.STATE_SKIPPING_TO_QUEUE_ITEM;
+import static android.media.session.PlaybackState.STATE_STOPPED;
+import static com.spuriouslabs.apps.autoplex.plex.AutoPlexMusicProvider.MEDIA_ID_ROOT;
 
 /**
  * This class provides a MediaBrowser through a service. It exposes the media library to a browsing
@@ -95,11 +111,19 @@ public class AutoPlexMusicService extends MediaBrowserService
 
 	private MediaSession media_session;
 	private boolean service_started;
-	private MediaSession.QueueItem current_media = null;
+	private PlayableMenuItem current_media = null;
 	public NotificationManagerCompat notification_manager;
 
 	private Player player;
-	private PlexMusicProvider provider;
+	private AutoPlexMusicProvider provider;
+
+	@IntDef({STATE_NONE, STATE_STOPPED, STATE_PAUSED, STATE_PLAYING, STATE_FAST_FORWARDING,
+			STATE_REWINDING, STATE_BUFFERING, STATE_ERROR, STATE_CONNECTING,
+			STATE_SKIPPING_TO_PREVIOUS, STATE_SKIPPING_TO_NEXT, STATE_SKIPPING_TO_QUEUE_ITEM})
+	@Retention(RetentionPolicy.SOURCE)
+	public @interface State {}
+
+	private @State int playback_state;
 
 	private Handler delayed_stop_handler = new Handler(new Handler.Callback(){
 		@Override
@@ -128,7 +152,7 @@ public class AutoPlexMusicService extends MediaBrowserService
 				MediaSession.FLAG_HANDLES_TRANSPORT_CONTROLS);
 
 
-		provider = PlexMusicProvider.get_instance(PlexConnector.getInstance(this));
+		provider = AutoPlexMusicProvider.get_instance(PlexConnector.getInstance(getApplicationContext()));
 		player = new Player(this, provider);
 		player.setCallback(new Player.Callback() {
 			@Override
@@ -199,36 +223,32 @@ public class AutoPlexMusicService extends MediaBrowserService
 			// this lets us call result.sendResult from another thread
 			result.detach();
 
-			provider.retrieveMediaAsync(parent_media_id, new PlexMusicProvider.Callback()
+			provider.retrieveMediaAsync(parent_media_id, new AutoPlexMusicProvider.Callback()
 			{
 				@Override
 				public void onMusicCatalogReady(boolean success)
 				{
-					if (success)
-						loadChildren(parent_media_id, result);
-					else {
+					loadChildren(parent_media_id, result);
+					if (!success)
 						updatePlaybackState("Error: No Metadata");
-						result.sendResult(Collections.<MediaItem>emptyList());
-					}
 				}
 			});
 		} else {
+			Log.d(TAG, "Menu cached, calling loadChildren(" + parent_media_id + ", result) directly");
 			loadChildren(parent_media_id, result);
 		}
 	}
 
 	private void loadChildren(String parent, final Result<List<MediaItem>> result)
 	{
-		List<MediaItem> ret;
+		Log.d(TAG, "loadChildren(" + parent + ", result)");
+		List<MediaItem> l = provider.getMenu(parent);
 
-		Log.d(TAG, "loadChildren(" + parent + ", result");
-
-		if (parent != null)
-			ret = provider.getMenu(parent);
-		else
-			ret = Collections.emptyList();
-
-		result.sendResult(ret);
+		if (!l.isEmpty()) {
+			Log.d(TAG, "Calling result.sendResult(provider.getMenu())");
+			Log.d(TAG, "Menu length(): " + l.size());
+			result.sendResult(l);
+		}
 	}
 
 	private final class MediaSessionCallback extends MediaSession.Callback
@@ -254,12 +274,9 @@ public class AutoPlexMusicService extends MediaBrowserService
 		{
 			Log.i(TAG, "onPlayFromMediaId(" + media_id + ", " + extras + ")");
 
-			MediaMetadata item = provider.getMusic(media_id);
-			if (item != null) {
-				current_media = new MediaSession.QueueItem(item.getDescription(), item.hashCode());
+			if ((current_media = provider.getMusic(media_id)) != null) {
 				handlePlayRequest();
 			}
-
 		}
 
 		@Override
@@ -296,7 +313,7 @@ public class AutoPlexMusicService extends MediaBrowserService
 			media_session.setActive(true);
 
 		updateMetadata();
-		player.play(PlayableMenuItem.fromMediaDescription(current_media.getDescription()));
+		player.play(current_media);
 	}
 
 	private void handlePauseRequest()
@@ -323,7 +340,7 @@ public class AutoPlexMusicService extends MediaBrowserService
 
 	private void updateMetadata()
 	{
-		media_session.setMetadata(provider.getMusic(current_media.getDescription().getMediaId()));
+		media_session.setMetadata(current_media.getMetadata());
 
 		/*
 		if (current_media.getDescription().getIconBitmap() == null &&
@@ -348,25 +365,25 @@ public class AutoPlexMusicService extends MediaBrowserService
 
 		PlaybackState.Builder state_builder = new PlaybackState.Builder().setActions(playback_actions);
 
-		int state = player.getState();
+		playback_state = player.getState();
 
 		if (error != null) {
 			state_builder.setErrorMessage(error);
-			state = PlaybackState.STATE_ERROR;
+			playback_state = STATE_ERROR;
 		}
 
-		state_builder.setState(state, pos, 1.0f, SystemClock.elapsedRealtime());
+		state_builder.setState(playback_state, pos, 1.0f, SystemClock.elapsedRealtime());
 
 		if (current_media != null)
-			state_builder.setActiveQueueItemId(current_media.getQueueId());
+			state_builder.setActiveQueueItemId(new MediaSession.QueueItem(current_media.getDescription(), current_media.hashCode()).getQueueId());
 
 		media_session.setPlaybackState(state_builder.build());
 
-		if (state == PlaybackState.STATE_PLAYING) {
+		if (playback_state == STATE_PLAYING) {
 			Notification notification = postNotification();
 			startForeground(NOTIFICATION_ID, notification);
 		} else {
-			if (state == PlaybackState.STATE_PAUSED)
+			if (playback_state == STATE_PAUSED)
 				postNotification();
 			else
 				notification_manager.cancel(NOTIFICATION_ID);
@@ -375,6 +392,7 @@ public class AutoPlexMusicService extends MediaBrowserService
 		}
 	}
 
+	@Nullable
 	private Notification postNotification()
 	{
 		Notification notification = MediaNotificationHelper.createNotification(this, media_session);

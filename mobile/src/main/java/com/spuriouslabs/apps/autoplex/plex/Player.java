@@ -3,8 +3,9 @@ package com.spuriouslabs.apps.autoplex.plex;
 import android.content.Context;
 import android.media.AudioManager;
 import android.media.MediaPlayer;
-import android.media.browse.MediaBrowser.MediaItem;
 import android.media.session.PlaybackState;
+import android.net.Uri;
+import android.os.Parcel;
 import android.os.PowerManager;
 import android.text.TextUtils;
 import android.util.Log;
@@ -13,6 +14,7 @@ import com.spuriouslabs.apps.autoplex.AutoPlexMusicService;
 import com.spuriouslabs.apps.autoplex.plex.utils.PlayableMenuItem;
 
 import java.io.IOException;
+import java.util.List;
 
 import static android.media.MediaPlayer.OnCompletionListener;
 import static android.media.MediaPlayer.OnErrorListener;
@@ -52,10 +54,11 @@ public class Player implements AudioManager.OnAudioFocusChangeListener, OnComple
 	private static final int AUDIO_FOCUSED = 2;
 
 	private final AutoPlexMusicService music_service;
-	private final PlexMusicProvider provider;
-	private int state = PlaybackState.STATE_NONE;
+	private final AutoPlexMusicProvider provider;
+	private @AutoPlexMusicService.State int state = PlaybackState.STATE_NONE;
 	private boolean play_on_focus_gain;
 	private Callback callback;
+	private Context ctx;
 
 	private volatile int current_position;
 	private volatile String current_media_id;
@@ -64,9 +67,9 @@ public class Player implements AudioManager.OnAudioFocusChangeListener, OnComple
 	private AudioManager audio_manager;
 	private MediaPlayer media_player;
 
-	public Player(AutoPlexMusicService service, PlexMusicProvider provider)
+	public Player(AutoPlexMusicService service, AutoPlexMusicProvider provider)
 	{
-		Context ctx = service.getApplicationContext();
+		ctx = service.getApplicationContext();
 		this.music_service = service;
 		this.provider = provider;
 		this.audio_manager = (AudioManager) ctx.getSystemService(Context.AUDIO_SERVICE);
@@ -85,7 +88,7 @@ public class Player implements AudioManager.OnAudioFocusChangeListener, OnComple
 		relaxResources(true);
 	}
 
-	public int getState()
+	public @AutoPlexMusicService.State int getState()
 	{
 		return state;
 	}
@@ -105,15 +108,14 @@ public class Player implements AudioManager.OnAudioFocusChangeListener, OnComple
 		return media_player != null ? media_player.getCurrentPosition() : current_position;
 	}
 
-	public void play(PlayableMenuItem item)
+	public void play(PlayableMenuItem track)
 	{
 		play_on_focus_gain = true;
 		tryToGetAudioFocus();
-		String media_id = item.getKey();
-		boolean media_has_changed = !TextUtils.equals(media_id, current_media_id);
+		boolean media_has_changed = !TextUtils.equals(track.getMediaId(), current_media_id);
 		if (media_has_changed) {
 			state = 0;
-			current_media_id = media_id;
+			current_media_id = track.getMediaId();
 		}
 
 		if (state == PlaybackState.STATE_PAUSED
@@ -122,7 +124,6 @@ public class Player implements AudioManager.OnAudioFocusChangeListener, OnComple
 		} else {
 			state = PlaybackState.STATE_STOPPED;
 			relaxResources(false); // release everything except MediaPlayer
-			PlayableMenuItem track = PlayableMenuItem.fromMediaMetadata(provider.getMusic(item.getKey()));
 
 			String source = provider.getUrlForMedia(track);
 			try {
@@ -131,7 +132,8 @@ public class Player implements AudioManager.OnAudioFocusChangeListener, OnComple
 				state = PlaybackState.STATE_BUFFERING;
 
 				media_player.setAudioStreamType(AudioManager.STREAM_MUSIC);
-				media_player.setDataSource(source);
+				Log.d(TAG, "Setting media datasource to " + source);
+				media_player.setDataSource(ctx, Uri.parse(source), provider.getPlexTokenHeaders());
 
 				// Starts preparing the media player in the background. When
 				// it's done, it will call our OnPreparedListener (that is,

@@ -1,6 +1,7 @@
 package com.spuriouslabs.apps.autoplex.plex.xml;
 
 import android.support.annotation.Nullable;
+import android.util.Log;
 
 import com.spuriouslabs.apps.autoplex.plex.utils.BrowsableMenuItem;
 import com.spuriouslabs.apps.autoplex.plex.utils.PlayableMenuItem;
@@ -18,6 +19,9 @@ import java.util.List;
 
 public class MusicMenuParser extends XMLParser<List<BrowsableMenuItem>>
 {
+	public static final String TAG = MusicMenuParser.class.getSimpleName();
+
+
 	@Nullable
 	protected List<BrowsableMenuItem> parse_feed() throws XmlPullParserException, IOException
 	{
@@ -31,10 +35,11 @@ public class MusicMenuParser extends XMLParser<List<BrowsableMenuItem>>
 			switch (event_type) {
 				case XmlPullParser.START_TAG:
 					name = parser.getName();
+					String is_search = parser.getAttributeValue(ns, "search");
 
 					if (name.equals("MediaContainer")) {
 						year = parser.getAttributeValue(ns, "parentYear");
-					} else if (name.equals("Directory")) {
+					} else if (name.equals("Directory") && (is_search == null || !is_search.equals("1"))) {
 						menu.add(new BrowsableMenuItem(
 								parser.getAttributeValue(ns, "title"),
 								parser.getAttributeValue(ns, "key"),
@@ -52,6 +57,7 @@ public class MusicMenuParser extends XMLParser<List<BrowsableMenuItem>>
 						nextTag("Media");
 						nextTag("Part");
 
+						Log.d(TAG, "pmi.setMediaUri(" + parser.getAttributeValue(ns, "key") + ")");
 						pmi.setMediaUri(parser.getAttributeValue(ns, "key"));
 
 						if (year != null) {

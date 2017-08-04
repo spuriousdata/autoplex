@@ -5,6 +5,7 @@ import android.media.MediaMetadata;
 import android.media.browse.MediaBrowser.MediaItem;
 import android.os.AsyncTask;
 import android.telecom.Call;
+import android.util.ArrayMap;
 import android.util.Log;
 import android.view.MenuItem;
 
@@ -25,18 +26,8 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 
-import static android.media.MediaMetadata.METADATA_KEY_ALBUM;
-import static android.media.MediaMetadata.METADATA_KEY_ALBUM_ART_URI;
-import static android.media.MediaMetadata.METADATA_KEY_ARTIST;
-import static android.media.MediaMetadata.METADATA_KEY_DISPLAY_ICON_URI;
-import static android.media.MediaMetadata.METADATA_KEY_DURATION;
-import static android.media.MediaMetadata.METADATA_KEY_GENRE;
-import static android.media.MediaMetadata.METADATA_KEY_MEDIA_ID;
-import static android.media.MediaMetadata.METADATA_KEY_MEDIA_URI;
-import static android.media.MediaMetadata.METADATA_KEY_NUM_TRACKS;
-import static android.media.MediaMetadata.METADATA_KEY_TITLE;
-import static android.media.MediaMetadata.METADATA_KEY_TRACK_NUMBER;
 import static android.media.browse.MediaBrowser.MediaItem.FLAG_PLAYABLE;
 
 /**
@@ -58,8 +49,6 @@ public class AutoPlexMusicProvider
 	private final LinkedHashMap<String, List<BrowsableMenuItem>> music_list_by_id;
 	private final LinkedHashMap<String, PlayableMenuItem> tracks_by_id;
 
-	private volatile Counter request_counter = new Counter();
-
 	/**
 	 * Callback used by MusicService.
 	 */
@@ -80,21 +69,39 @@ public class AutoPlexMusicProvider
 		return instance;
 	}
 
-	public List<BrowsableMenuItem> getMenu(String parent) {
+	public List<MediaItem> getMenu(String parent) {
 
 		Log.d(TAG, "getMenu(" + parent + ")");
 
 		if (!hasMenuFor(parent))
 			return Collections.emptyList();
 
-		return music_list_by_id.get(parent);
+		List<MediaItem> menu = new ArrayList<>();
+		MediaDescription.Builder menu_builder = new MediaDescription.Builder();
+
+		for (BrowsableMenuItem item : music_list_by_id.get(parent)) {
+			/*
+			 * So, this is insane. Somewhere in the android musicservice code there must be a
+			 * specific type check for MediaItem because if you upcast the BrowsableMenuItem to
+			 * MediaItem, it doesn't work. You must create a brand new vanilla MediaItem instance
+			 * here and push that onto the list.
+			 */
+			menu.add(new MediaItem(item.getDescription(), item.getFlags()));
+		}
+
+		return menu;
 	}
 
-	public boolean hasMenuFor(String parent)
+	public Map<String, String> getPlexTokenHeaders()
 	{
-		if (music_list_by_id.isEmpty() || !music_list_by_id.containsKey(parent))
-			return false;
-		return true;
+		Map<String, String> headers = new ArrayMap<>();
+		headers.put("X-Plex-Token", connector.getToken());
+		return headers;
+	}
+
+	public synchronized boolean hasMenuFor(String parent)
+	{
+		return !(music_list_by_id.isEmpty() || !music_list_by_id.containsKey(parent));
 	}
 
 	public String getUrlForMedia(PlayableMenuItem i)
@@ -115,10 +122,11 @@ public class AutoPlexMusicProvider
 	 * Get the list of music tracks from a server and caches the track information
 	 * for future reference, keying tracks by musicId and grouping by genre.
 	 */
-	public void retrieveMediaAsync(final String parent, final Callback callback) {
+	public void retrieveMediaAsync(final String parent, final Callback callback)
+	{
 		Log.d(TAG, "retrieveMediaAsync called");
 		if (hasMenuFor(parent)) {
-			// alredy got this, so call the callback and return
+			// already got this, so call the callback and return
 			callback.onMusicCatalogReady(true);
 			return;
 		}
@@ -128,18 +136,19 @@ public class AutoPlexMusicProvider
 			@Override
 			protected String doInBackground(Void... params) {
 				retrieveMedia(parent, callback);
-				return parent;
+				return "";
 			}
 		}.execute();
 	}
 
-	private synchronized void retrieveMedia(final String parent, final Callback callback) {
+	private synchronized void retrieveMedia(final String parent, final Callback callback)
+	{
 
 		Log.d(TAG, "retrieveMedia(" + parent + ")");
 
 		if (!hasMenuFor(parent)) {
 
-			String menu_url;
+			final String menu_url;
 			if (parent.equals(MEDIA_ID_ROOT))
 				menu_url = connector.getMusicLibraryUrl();
 			else if (parent.charAt(0) != '/')
@@ -160,18 +169,22 @@ public class AutoPlexMusicProvider
 
 							if (item.getFlags() == FLAG_PLAYABLE)
 								tracks_by_id.put(item.getMediaId(), (PlayableMenuItem)item);
+
 						}
 						music_list_by_id.put(parent, menu_list);
-						callback.onMusicCatalogReady(true);
 					} catch (XmlPullParserException | IOException e) {
 						e.printStackTrace();
-						callback.onMusicCatalogReady(false);
 					}
+
+					Log.d(TAG, "Finished fetching url: " + menu_url);
+					callback.onMusicCatalogReady(true);
 				}
 			}, new Response.ErrorListener() {
 				@Override
 				public void onErrorResponse(VolleyError error) {
+					Log.e(TAG, "Error fetching url: " + menu_url);
 					error.printStackTrace();
+					callback.onMusicCatalogReady(false);
 				}
 			}));
 		}

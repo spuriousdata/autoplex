@@ -1,6 +1,9 @@
 package com.spuriouslabs.apps.autoplex.plex.utils;
 
+import android.media.MediaDescription;
+import android.media.browse.MediaBrowser;
 import android.support.annotation.IntDef;
+import android.view.MenuItem;
 
 import static android.media.browse.MediaBrowser.MediaItem.FLAG_BROWSABLE;
 import static android.media.browse.MediaBrowser.MediaItem.FLAG_PLAYABLE;
@@ -9,17 +12,21 @@ import static android.media.browse.MediaBrowser.MediaItem.FLAG_PLAYABLE;
  * Created by omalleym on 7/19/17.
  */
 
-public class BrowsableMenuItem
+public class BrowsableMenuItem extends MediaBrowser.MediaItem
 {
 	protected final String title;
 	protected final String key;
 	protected final String icon_uri;
 
-	@IntDef(flag=true, value = { FLAG_BROWSABLE, FLAG_PLAYABLE })
-	public @interface Flags {}
-
 	public BrowsableMenuItem(final String title, final String key, final String icon_uri)
 	{
+		this(title, key, icon_uri, FLAG_BROWSABLE);
+	}
+
+	protected BrowsableMenuItem(final String title, final String key, final String icon_uri, int flag)
+	{
+		super((new MediaDescription.Builder()).setTitle(title).setMediaId(key).build(), flag);
+
 		this.title = title;
 		this.key = key;
 		this.icon_uri = icon_uri;
@@ -35,18 +42,8 @@ public class BrowsableMenuItem
 		return title;
 	}
 
-	public String getKey()
-	{
-		return key;
-	}
-
 	public String getIconUri()
 	{
 		return icon_uri;
-	}
-
-	public @Flags int getFlag()
-	{
-		return FLAG_BROWSABLE;
 	}
 }
