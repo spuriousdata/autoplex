@@ -17,7 +17,6 @@ import android.support.annotation.Nullable;
 import android.support.v4.app.NotificationManagerCompat;
 import android.support.v4.media.session.MediaButtonReceiver;
 import android.support.v4.media.session.MediaSessionCompat;
-import android.support.v4.media.session.PlaybackStateCompat;
 import android.util.Log;
 
 import com.spuriouslabs.apps.autoplex.plex.AutoPlexMusicProvider;
@@ -27,7 +26,6 @@ import com.spuriouslabs.apps.autoplex.plex.utils.PlayableMenuItem;
 
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
-import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
@@ -145,14 +143,16 @@ public class AutoPlexMusicService extends MediaBrowserService
 	{
 		super.onCreate();
 
+		Context ctx = getApplicationContext();
+
 		media_session = new MediaSession(this, TAG);
 		setSessionToken(media_session.getSessionToken());
-		media_session.setCallback(new MediaSessionCallback());
+		media_session.setCallback(new AutoPlexMediaSessionCallback());
 		media_session.setFlags(MediaSession.FLAG_HANDLES_MEDIA_BUTTONS |
 				MediaSession.FLAG_HANDLES_TRANSPORT_CONTROLS);
 
 
-		provider = AutoPlexMusicProvider.get_instance(PlexConnector.getInstance(getApplicationContext()));
+		provider = AutoPlexMusicProvider.get_instance(PlexConnector.getInstance(ctx));
 		player = new Player(this, provider);
 		player.setCallback(new Player.Callback() {
 			@Override
@@ -174,7 +174,7 @@ public class AutoPlexMusicService extends MediaBrowserService
 			}
 		});
 
-		Context ctx = getApplicationContext();
+
 		Intent intent = new Intent(ctx, MainActivity.class);
 		intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
 		PendingIntent pi = PendingIntent.getActivity(ctx, REQUEST_CODE, intent,
@@ -188,9 +188,11 @@ public class AutoPlexMusicService extends MediaBrowserService
 	@Override
 	public int onStartCommand(Intent start_intent, int flags, int start_id)
 	{
-		Context ctx = getApplicationContext();
-		MediaSessionCompat msc = MediaSessionCompat.fromMediaSession(ctx, media_session);
-		MediaButtonReceiver.handleIntent(msc, start_intent);
+		Log.d(TAG, "onStartCommand()");
+
+		MediaButtonReceiver.handleIntent(
+				MediaSessionCompat.fromMediaSession(
+					getApplicationContext(), media_session), start_intent);
 		return super.onStartCommand(start_intent, flags, start_id);
 	}
 
@@ -251,7 +253,7 @@ public class AutoPlexMusicService extends MediaBrowserService
 		}
 	}
 
-	private final class MediaSessionCallback extends MediaSession.Callback
+	private final class AutoPlexMediaSessionCallback extends MediaSession.Callback
 	{
 
 		@Override
@@ -292,6 +294,15 @@ public class AutoPlexMusicService extends MediaBrowserService
 			Log.d(TAG, "onStop()");
 			handleStopRequest();
 		}
+
+		/*
+		@Override
+		public boolean onMediaButtonEvent(Intent media_button)
+		{
+			Log.d(TAG, "Got media_button press of some kind");
+			return false;
+		}
+		*/
 	}
 
 	private void handlePlayRequest()

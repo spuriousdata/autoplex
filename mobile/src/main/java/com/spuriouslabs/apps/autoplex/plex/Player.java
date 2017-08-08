@@ -1,11 +1,11 @@
 package com.spuriouslabs.apps.autoplex.plex;
 
 import android.content.Context;
+
 import android.media.AudioManager;
 import android.media.MediaPlayer;
 import android.media.session.PlaybackState;
 import android.net.Uri;
-import android.os.Parcel;
 import android.os.PowerManager;
 import android.text.TextUtils;
 import android.util.Log;
@@ -14,7 +14,6 @@ import com.spuriouslabs.apps.autoplex.AutoPlexMusicService;
 import com.spuriouslabs.apps.autoplex.plex.utils.PlayableMenuItem;
 
 import java.io.IOException;
-import java.util.List;
 
 import static android.media.MediaPlayer.OnCompletionListener;
 import static android.media.MediaPlayer.OnErrorListener;
@@ -114,7 +113,7 @@ public class Player implements AudioManager.OnAudioFocusChangeListener, OnComple
 		tryToGetAudioFocus();
 		boolean media_has_changed = !TextUtils.equals(track.getMediaId(), current_media_id);
 		if (media_has_changed) {
-			state = 0;
+			state = PlaybackState.STATE_NONE;
 			current_media_id = track.getMediaId();
 		}
 
@@ -158,6 +157,7 @@ public class Player implements AudioManager.OnAudioFocusChangeListener, OnComple
 
 	public void pause()
 	{
+		Log.d(TAG, "Player.pause()");
 		if (state == PlaybackState.STATE_PLAYING) {
 			// Pause media player and cancel the 'foreground service' state.
 			if (media_player != null && media_player.isPlaying()) {
