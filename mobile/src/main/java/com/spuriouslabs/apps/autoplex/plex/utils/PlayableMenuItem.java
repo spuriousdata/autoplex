@@ -1,7 +1,7 @@
 package com.spuriouslabs.apps.autoplex.plex.utils;
 
-import android.media.MediaDescription;
 import android.media.MediaMetadata;
+import android.support.v4.media.MediaMetadataCompat;
 
 import static android.media.MediaMetadata.METADATA_KEY_ALBUM;
 import static android.media.MediaMetadata.METADATA_KEY_ALBUM_ART_URI;
@@ -13,7 +13,6 @@ import static android.media.MediaMetadata.METADATA_KEY_MEDIA_ID;
 import static android.media.MediaMetadata.METADATA_KEY_NUM_TRACKS;
 import static android.media.MediaMetadata.METADATA_KEY_TITLE;
 import static android.media.MediaMetadata.METADATA_KEY_TRACK_NUMBER;
-import static android.media.browse.MediaBrowser.MediaItem.FLAG_PLAYABLE;
 
 /**
  * Created by omalleym on 7/28/17.
@@ -23,8 +22,8 @@ public class PlayableMenuItem extends BrowsableMenuItem
 {
 	private String media_uri;
 	private String date;
-	private MediaMetadata metadata;
-	private MediaMetadata.Builder metadata_builder = new MediaMetadata.Builder();
+	private MediaMetadataCompat metadata;
+	private MediaMetadataCompat.Builder metadata_builder = new MediaMetadataCompat.Builder();
 
 	public PlayableMenuItem(final String title, final String key, final String icon_uri)
 	{
@@ -40,13 +39,13 @@ public class PlayableMenuItem extends BrowsableMenuItem
 		return getMediaId();
 	}
 
-	public void setMetadata(MediaMetadata m)
+	public void setMetadata(MediaMetadataCompat m)
 	{
 		metadata = m;
-		metadata_builder = new MediaMetadata.Builder(m);
+		metadata_builder = new MediaMetadataCompat.Builder(m);
 	}
 
-	public MediaMetadata getMetadata()
+	public MediaMetadataCompat getMetadata()
 	{
 		return metadata;
 	}

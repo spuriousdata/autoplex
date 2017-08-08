@@ -1,21 +1,16 @@
 package com.spuriouslabs.apps.autoplex.plex;
 
 import android.media.MediaDescription;
-import android.media.MediaMetadata;
-import android.media.browse.MediaBrowser.MediaItem;
 import android.os.AsyncTask;
-import android.telecom.Call;
+import android.support.v4.media.MediaBrowserCompat.MediaItem;
 import android.util.ArrayMap;
 import android.util.Log;
-import android.view.MenuItem;
 
 import com.android.volley.Request;
 import com.android.volley.Response;
 import com.android.volley.VolleyError;
-import com.spuriouslabs.apps.autoplex.AutoPlexMusicService;
 import com.spuriouslabs.apps.autoplex.http.PlexTokenHttpRequest;
 import com.spuriouslabs.apps.autoplex.plex.utils.BrowsableMenuItem;
-import com.spuriouslabs.apps.autoplex.plex.utils.Counter;
 import com.spuriouslabs.apps.autoplex.plex.utils.PlayableMenuItem;
 import com.spuriouslabs.apps.autoplex.plex.xml.MusicMenuParser;
 
