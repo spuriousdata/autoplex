@@ -4,19 +4,19 @@ import android.app.Notification;
 import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
-import android.media.browse.MediaBrowser.MediaItem;
+import android.support.v4.media.MediaBrowserCompat.MediaItem;
 import android.media.session.MediaSession;
 import android.media.session.PlaybackState;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
 import android.os.SystemClock;
-import android.service.media.MediaBrowserService;
-import android.support.annotation.IntDef;
 import android.support.annotation.Nullable;
 import android.support.v4.app.NotificationManagerCompat;
+import android.support.v4.media.MediaBrowserServiceCompat;
 import android.support.v4.media.session.MediaButtonReceiver;
 import android.support.v4.media.session.MediaSessionCompat;
+import android.support.v4.media.session.PlaybackStateCompat;
 import android.util.Log;
 
 import com.spuriouslabs.apps.autoplex.plex.AutoPlexMusicProvider;
@@ -24,23 +24,14 @@ import com.spuriouslabs.apps.autoplex.plex.Player;
 import com.spuriouslabs.apps.autoplex.plex.PlexConnector;
 import com.spuriouslabs.apps.autoplex.plex.utils.PlayableMenuItem;
 
-import java.lang.annotation.Retention;
-import java.lang.annotation.RetentionPolicy;
+
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
-import static android.media.session.PlaybackState.STATE_BUFFERING;
-import static android.media.session.PlaybackState.STATE_CONNECTING;
+
 import static android.media.session.PlaybackState.STATE_ERROR;
-import static android.media.session.PlaybackState.STATE_FAST_FORWARDING;
-import static android.media.session.PlaybackState.STATE_NONE;
 import static android.media.session.PlaybackState.STATE_PAUSED;
 import static android.media.session.PlaybackState.STATE_PLAYING;
-import static android.media.session.PlaybackState.STATE_REWINDING;
-import static android.media.session.PlaybackState.STATE_SKIPPING_TO_NEXT;
-import static android.media.session.PlaybackState.STATE_SKIPPING_TO_PREVIOUS;
-import static android.media.session.PlaybackState.STATE_SKIPPING_TO_QUEUE_ITEM;
-import static android.media.session.PlaybackState.STATE_STOPPED;
 import static com.spuriouslabs.apps.autoplex.plex.AutoPlexMusicProvider.MEDIA_ID_ROOT;
 
 /**
@@ -98,7 +89,7 @@ import static com.spuriouslabs.apps.autoplex.plex.AutoPlexMusicProvider.MEDIA_ID
  *
  * @see <a href="README.md">README.md</a> for more details.
  */
-public class AutoPlexMusicService extends MediaBrowserService
+public class AutoPlexMusicService extends MediaBrowserServiceCompat
 {
 	private static final String TAG = AutoPlexMusicService.class.getSimpleName();
 	private static final long STOP_DELAY = TimeUnit.SECONDS.toMillis(30);
@@ -107,21 +98,13 @@ public class AutoPlexMusicService extends MediaBrowserService
 	// Request code for starting the UI.
 	private static final int REQUEST_CODE = 99;
 
-	private MediaSession media_session;
+	private MediaSessionCompat media_session;
 	private boolean service_started;
 	private PlayableMenuItem current_media = null;
 	public NotificationManagerCompat notification_manager;
 
 	private Player player;
 	private AutoPlexMusicProvider provider;
-
-	@IntDef({STATE_NONE, STATE_STOPPED, STATE_PAUSED, STATE_PLAYING, STATE_FAST_FORWARDING,
-			STATE_REWINDING, STATE_BUFFERING, STATE_ERROR, STATE_CONNECTING,
-			STATE_SKIPPING_TO_PREVIOUS, STATE_SKIPPING_TO_NEXT, STATE_SKIPPING_TO_QUEUE_ITEM})
-	@Retention(RetentionPolicy.SOURCE)
-	public @interface State {}
-
-	private @State int playback_state;
 
 	private Handler delayed_stop_handler = new Handler(new Handler.Callback(){
 		@Override
@@ -145,7 +128,7 @@ public class AutoPlexMusicService extends MediaBrowserService
 
 		Context ctx = getApplicationContext();
 
-		media_session = new MediaSession(this, TAG);
+		media_session = new MediaSessionCompat(this, TAG);
 		setSessionToken(media_session.getSessionToken());
 		media_session.setCallback(new AutoPlexMediaSessionCallback());
 		media_session.setFlags(MediaSession.FLAG_HANDLES_MEDIA_BUTTONS |
@@ -190,9 +173,7 @@ public class AutoPlexMusicService extends MediaBrowserService
 	{
 		Log.d(TAG, "onStartCommand()");
 
-		MediaButtonReceiver.handleIntent(
-				MediaSessionCompat.fromMediaSession(
-					getApplicationContext(), media_session), start_intent);
+		MediaButtonReceiver.handleIntent(media_session, start_intent);
 		return super.onStartCommand(start_intent, flags, start_id);
 	}
 
@@ -253,7 +234,7 @@ public class AutoPlexMusicService extends MediaBrowserService
 		}
 	}
 
-	private final class AutoPlexMediaSessionCallback extends MediaSession.Callback
+	private final class AutoPlexMediaSessionCallback extends MediaSessionCompat.Callback
 	{
 
 		@Override
@@ -374,9 +355,9 @@ public class AutoPlexMusicService extends MediaBrowserService
 		if (player.isPlaying())
 			playback_actions |= PlaybackState.ACTION_PAUSE;
 
-		PlaybackState.Builder state_builder = new PlaybackState.Builder().setActions(playback_actions);
+		PlaybackStateCompat.Builder state_builder = new PlaybackStateCompat.Builder().setActions(playback_actions);
 
-		playback_state = player.getState();
+		int playback_state = player.getState();
 
 		if (error != null) {
 			state_builder.setErrorMessage(error);
@@ -386,7 +367,7 @@ public class AutoPlexMusicService extends MediaBrowserService
 		state_builder.setState(playback_state, pos, 1.0f, SystemClock.elapsedRealtime());
 
 		if (current_media != null)
-			state_builder.setActiveQueueItemId(new MediaSession.QueueItem(current_media.getDescription(), current_media.hashCode()).getQueueId());
+			state_builder.setActiveQueueItemId(new MediaSessionCompat.QueueItem(current_media.getDescription(), current_media.hashCode()).getQueueId());
 
 		media_session.setPlaybackState(state_builder.build());
 

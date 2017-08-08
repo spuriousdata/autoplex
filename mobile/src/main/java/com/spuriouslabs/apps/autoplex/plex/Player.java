@@ -54,7 +54,7 @@ public class Player implements AudioManager.OnAudioFocusChangeListener, OnComple
 
 	private final AutoPlexMusicService music_service;
 	private final AutoPlexMusicProvider provider;
-	private @AutoPlexMusicService.State int state = PlaybackState.STATE_NONE;
+	private int state = PlaybackState.STATE_NONE;
 	private boolean play_on_focus_gain;
 	private Callback callback;
 	private Context ctx;
@@ -87,7 +87,7 @@ public class Player implements AudioManager.OnAudioFocusChangeListener, OnComple
 		relaxResources(true);
 	}
 
-	public @AutoPlexMusicService.State int getState()
+	public int getState()
 	{
 		return state;
 	}

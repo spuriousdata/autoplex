@@ -4,12 +4,13 @@ import android.app.Notification;
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
-import android.media.MediaDescription;
-import android.media.MediaMetadata;
-import android.media.session.MediaController;
-import android.media.session.MediaSession;
-import android.media.session.PlaybackState;
+import android.support.v4.media.MediaDescriptionCompat;
+import android.support.v4.media.MediaMetadataCompat;
 import android.support.v4.media.session.MediaButtonReceiver;
+import android.support.v4.media.session.MediaControllerCompat;
+import android.support.v4.media.session.MediaSessionCompat;
+import android.support.v4.media.session.PlaybackStateCompat;
+import android.support.v7.app.NotificationCompat;
 
 /**
  * Created by omalleym on 7/28/17.
@@ -24,28 +25,28 @@ public class MediaNotificationHelper
 	}
 
 	public static Notification createNotification(Context context,
-												  MediaSession mediaSession)
+												  MediaSessionCompat mediaSession)
 	{
-		MediaController controller = mediaSession.getController();
-		MediaMetadata mMetadata = controller.getMetadata();
-		PlaybackState mPlaybackState = controller.getPlaybackState();
+		MediaControllerCompat controller = mediaSession.getController();
+		MediaMetadataCompat mMetadata = controller.getMetadata();
+		PlaybackStateCompat mPlaybackState = controller.getPlaybackState();
 
 		if (mMetadata == null || mPlaybackState == null) {
 			return null;
 		}
 
-		boolean isPlaying = mPlaybackState.getState() == PlaybackState.STATE_PLAYING;
-		Notification.Action action = isPlaying
-				? new Notification.Action(R.drawable.ic_pause_white_24dp,
+		boolean isPlaying = mPlaybackState.getState() == PlaybackStateCompat.STATE_PLAYING;
+		NotificationCompat.Action action = isPlaying
+				? new NotificationCompat.Action(R.drawable.ic_pause_white_24dp,
 				context.getString(R.string.label_pause),
 				MediaButtonReceiver.buildMediaButtonPendingIntent(context,
-						PlaybackState.ACTION_PAUSE))
-				: new Notification.Action(R.drawable.ic_play_arrow_white_24dp,
+						PlaybackStateCompat.ACTION_PAUSE))
+				: new NotificationCompat.Action(R.drawable.ic_play_arrow_white_24dp,
 				context.getString(R.string.label_play),
 				MediaButtonReceiver.buildMediaButtonPendingIntent(context,
-						PlaybackState.ACTION_PLAY));
+						PlaybackStateCompat.ACTION_PLAY));
 
-		MediaDescription description = mMetadata.getDescription();
+		MediaDescriptionCompat description = mMetadata.getDescription();
 		Bitmap art = description.getIconBitmap();
 		if (art == null) {
 			// use a placeholder art while the remote art is being downloaded.
@@ -53,9 +54,9 @@ public class MediaNotificationHelper
 					R.drawable.ic_default_art);
 		}
 
-		Notification.Builder notificationBuilder = new Notification.Builder(context);
+		NotificationCompat.Builder notificationBuilder = new NotificationCompat.Builder(context);
 		notificationBuilder
-				.setStyle(new Notification.MediaStyle()
+				.setStyle(new NotificationCompat.MediaStyle()
 						// show only play/pause in compact view.
 						.setShowActionsInCompactView(new int[]{0})
 						.setMediaSession(mediaSession.getSessionToken()))
@@ -66,7 +67,7 @@ public class MediaNotificationHelper
 				.setContentTitle(description.getTitle())
 				.setContentText(description.getSubtitle())
 				.setLargeIcon(art)
-				.setVisibility(Notification.VISIBILITY_PUBLIC);
+				.setVisibility(NotificationCompat.VISIBILITY_PUBLIC);
 
 		return notificationBuilder.build();
 	}
