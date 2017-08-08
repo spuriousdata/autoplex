@@ -1,6 +1,5 @@
 package com.spuriouslabs.apps.autoplex.plex.utils;
 
-import android.media.MediaMetadata;
 import android.support.v4.media.MediaMetadataCompat;
 
 import static android.media.MediaMetadata.METADATA_KEY_ALBUM;
@@ -22,6 +21,7 @@ public class PlayableMenuItem extends BrowsableMenuItem
 {
 	private String media_uri;
 	private String date;
+	private String album_uri;
 	private MediaMetadataCompat metadata;
 	private MediaMetadataCompat.Builder metadata_builder = new MediaMetadataCompat.Builder();
 
@@ -37,6 +37,16 @@ public class PlayableMenuItem extends BrowsableMenuItem
 	public String getKey()
 	{
 		return getMediaId();
+	}
+
+	public String getAlbumUri()
+	{
+		return album_uri;
+	}
+
+	public void setAlbumUri(String album_uri)
+	{
+		this.album_uri = album_uri;
 	}
 
 	public void setMetadata(MediaMetadataCompat m)

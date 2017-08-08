@@ -87,6 +87,17 @@ public class AutoPlexMusicProvider
 		return menu;
 	}
 
+	public List<PlayableMenuItem> getAlbum(String album_uri)
+	{
+		List<PlayableMenuItem> album = new ArrayList<>();
+
+		for (BrowsableMenuItem i : music_list_by_id.get(album_uri)) {
+			Log.d(TAG, "Adding item " + i.getTitle() + " to album.");
+			album.add((PlayableMenuItem)i);
+		}
+		return album;
+	}
+
 	public Map<String, String> getPlexTokenHeaders()
 	{
 		Map<String, String> headers = new ArrayMap<>();

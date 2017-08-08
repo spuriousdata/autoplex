@@ -25,6 +25,7 @@ import com.spuriouslabs.apps.autoplex.plex.PlexConnector;
 import com.spuriouslabs.apps.autoplex.plex.utils.PlayableMenuItem;
 
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
@@ -106,6 +107,8 @@ public class AutoPlexMusicService extends MediaBrowserServiceCompat
 	private Player player;
 	private AutoPlexMusicProvider provider;
 
+	private List<MediaSessionCompat.QueueItem> media_queue;
+
 	private Handler delayed_stop_handler = new Handler(new Handler.Callback(){
 		@Override
 		public boolean handleMessage(Message msg)
@@ -133,6 +136,10 @@ public class AutoPlexMusicService extends MediaBrowserServiceCompat
 		media_session.setCallback(new AutoPlexMediaSessionCallback());
 		media_session.setFlags(MediaSession.FLAG_HANDLES_MEDIA_BUTTONS |
 				MediaSession.FLAG_HANDLES_TRANSPORT_CONTROLS);
+
+		media_queue = new ArrayList<>();
+
+		media_session.setQueue(media_queue);
 
 
 		provider = AutoPlexMusicProvider.get_instance(PlexConnector.getInstance(ctx));
@@ -246,18 +253,17 @@ public class AutoPlexMusicService extends MediaBrowserServiceCompat
 		}
 
 		@Override
-		public void onSeekTo(long position)
-		{
-			Log.d(TAG, "onSeekTo(" + position + ")");
-			player.seekTo((int) position);
-		}
-
-		@Override
 		public void onPlayFromMediaId(String media_id, Bundle extras)
 		{
 			Log.i(TAG, "onPlayFromMediaId(" + media_id + ", " + extras + ")");
 
 			if ((current_media = provider.getMusic(media_id)) != null) {
+				media_queue.clear();
+				for (PlayableMenuItem i : provider.getAlbum(current_media.getAlbumUri())) {
+					if (i.getTrackNumber() >= current_media.getTrackNumber()) {
+						media_queue.add(new MediaSessionCompat.QueueItem(i.getDescription(), i.hashCode()));
+					}
+				}
 				handlePlayRequest();
 			}
 		}
@@ -276,14 +282,17 @@ public class AutoPlexMusicService extends MediaBrowserServiceCompat
 			handleStopRequest();
 		}
 
-		/*
 		@Override
-		public boolean onMediaButtonEvent(Intent media_button)
+		public void onSkipToNext()
 		{
-			Log.d(TAG, "Got media_button press of some kind");
-			return false;
+			Log.d(TAG, "onSkipToNext()");
 		}
-		*/
+
+		@Override
+		public void onSkipToPrevious()
+		{
+			Log.d(TAG, "onSkipToPrevious");
+		}
 	}
 
 	private void handlePlayRequest()
@@ -351,7 +360,12 @@ public class AutoPlexMusicService extends MediaBrowserServiceCompat
 		if (player != null && player.isConnected())
 			pos = player.getCurrentStreamPosition();
 
-		long playback_actions = PlaybackState.ACTION_PLAY | PlaybackState.ACTION_PLAY_FROM_MEDIA_ID;
+		/*
+		 * This is the line that tells android auto what buttons to draw out.
+		 */
+		long playback_actions = PlaybackState.ACTION_PLAY | PlaybackState.ACTION_PLAY_FROM_MEDIA_ID
+				| PlaybackState.ACTION_SKIP_TO_NEXT | PlaybackState.ACTION_SKIP_TO_PREVIOUS;
+
 		if (player.isPlaying())
 			playback_actions |= PlaybackState.ACTION_PAUSE;
 

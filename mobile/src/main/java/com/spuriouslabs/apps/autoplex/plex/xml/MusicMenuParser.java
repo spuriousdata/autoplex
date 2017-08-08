@@ -52,7 +52,12 @@ public class MusicMenuParser extends XMLParser<List<BrowsableMenuItem>>
 								parser.getAttributeValue(ns, "thumb"));
 						pmi.setDuration(Integer.parseInt(parser.getAttributeValue(ns, "duration")));
 						pmi.setAlbum(parser.getAttributeValue(ns, "parentTitle"));
+						String album_uri = parser.getAttributeValue(ns, "parentKey");
+						if (!album_uri.endsWith("children"))
+							album_uri += "/children";
+						pmi.setAlbumUri(album_uri);
 						pmi.setArtist(parser.getAttributeValue(ns, "grandparentTitle"));
+						pmi.setTrackNumber(Integer.parseInt(parser.getAttributeValue(ns, "index")));
 
 						nextTag("Media");
 						nextTag("Part");
