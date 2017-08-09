@@ -23,6 +23,7 @@ import com.spuriouslabs.apps.autoplex.plex.AutoPlexMusicProvider;
 import com.spuriouslabs.apps.autoplex.plex.Player;
 import com.spuriouslabs.apps.autoplex.plex.PlexConnector;
 import com.spuriouslabs.apps.autoplex.plex.utils.PlayableMenuItem;
+import com.spuriouslabs.apps.autoplex.plex.utils.QueueHelper;
 
 
 import java.util.ArrayList;
@@ -101,13 +102,13 @@ public class AutoPlexMusicService extends MediaBrowserServiceCompat
 
 	private MediaSessionCompat media_session;
 	private boolean service_started;
-	private PlayableMenuItem current_media = null;
 	public NotificationManagerCompat notification_manager;
 
 	private Player player;
 	private AutoPlexMusicProvider provider;
 
 	private List<MediaSessionCompat.QueueItem> media_queue;
+	private int current_queue_index = -1;
 
 	private Handler delayed_stop_handler = new Handler(new Handler.Callback(){
 		@Override
@@ -138,9 +139,6 @@ public class AutoPlexMusicService extends MediaBrowserServiceCompat
 				MediaSession.FLAG_HANDLES_TRANSPORT_CONTROLS);
 
 		media_queue = new ArrayList<>();
-
-		media_session.setQueue(media_queue);
-
 
 		provider = AutoPlexMusicProvider.get_instance(PlexConnector.getInstance(ctx));
 		player = new Player(this, provider);
@@ -248,22 +246,36 @@ public class AutoPlexMusicService extends MediaBrowserServiceCompat
 		public void onPlay()
 		{
 			Log.d(TAG, "onPlay()");
-			if (current_media != null)
+
+			if (media_queue == null || media_queue.isEmpty()) {
+				/*
+				media_queue = provider.getRandomQueue();
+				media_session.setQueue(media_queue);
+				media_session.setQueueTitle("Random Queue");
+				current_queue_index = 0;
+				 */
+			}
+
+			if (media_queue != null && !media_queue.isEmpty())
 				handlePlayRequest();
 		}
 
 		@Override
 		public void onPlayFromMediaId(String media_id, Bundle extras)
 		{
+			PlayableMenuItem track = provider.getMusic(media_id);
+
 			Log.i(TAG, "onPlayFromMediaId(" + media_id + ", " + extras + ")");
 
-			if ((current_media = provider.getMusic(media_id)) != null) {
+			if (track != null) {
 				media_queue.clear();
-				for (PlayableMenuItem i : provider.getAlbum(current_media.getAlbumUri())) {
-					if (i.getTrackNumber() >= current_media.getTrackNumber()) {
+				for (PlayableMenuItem i : provider.getAlbum(track.getAlbumUri())) {
+					if (i.getTrackNumber() >= track.getTrackNumber()) {
 						media_queue.add(new MediaSessionCompat.QueueItem(i.getDescription(), i.hashCode()));
 					}
 				}
+				media_session.setQueue(media_queue);
+				current_queue_index = 0;
 				handlePlayRequest();
 			}
 		}
@@ -286,21 +298,34 @@ public class AutoPlexMusicService extends MediaBrowserServiceCompat
 		public void onSkipToNext()
 		{
 			Log.d(TAG, "onSkipToNext()");
+			incrementQueueIndex(1);
 		}
 
 		@Override
 		public void onSkipToPrevious()
 		{
 			Log.d(TAG, "onSkipToPrevious");
+			incrementQueueIndex(-1);
+		}
+
+		private void incrementQueueIndex(int increment)
+		{
+			current_queue_index += increment;
+			if (media_queue != null && (current_queue_index >= media_queue.size() || current_queue_index < 0)) {
+				current_queue_index = 0;
+			}
+			if (QueueHelper.indexIsPlayable(current_queue_index, media_queue)) {
+				handlePlayRequest();
+			} else {
+				Log.e(TAG, "Error, can't play beyond end of queue");
+				handleStopRequest();
+			}
 		}
 	}
 
 	private void handlePlayRequest()
 	{
 		Log.d(TAG, "handlePlayRequest() state=" + player.getState());
-
-		if (current_media == null)
-			return;
 
 		delayed_stop_handler.removeCallbacksAndMessages(null);
 		if (!service_started) {
@@ -313,8 +338,10 @@ public class AutoPlexMusicService extends MediaBrowserServiceCompat
 		if (!media_session.isActive())
 			media_session.setActive(true);
 
-		updateMetadata();
-		player.play(current_media);
+		if (QueueHelper.indexIsPlayable(current_queue_index, media_queue)) {
+			updateMetadata();
+			player.play(media_queue.get(current_queue_index));
+		}
 	}
 
 	private void handlePauseRequest()
@@ -341,15 +368,18 @@ public class AutoPlexMusicService extends MediaBrowserServiceCompat
 
 	private void updateMetadata()
 	{
-		media_session.setMetadata(current_media.getMetadata());
+		if (!QueueHelper.indexIsPlayable(current_queue_index, media_queue)) {
+			Log.e(TAG, "Error, Can't retrieve track metadata!!");
+			return;
+		}
+
+		MediaSessionCompat.QueueItem item = media_queue.get(current_queue_index);
+		PlayableMenuItem pi = provider.getMusic(item.getDescription().getMediaId());
+		media_session.setMetadata(pi.getMetadata());
 
 		/*
-		if (current_media.getDescription().getIconBitmap() == null &&
-				current_media.getDescription().getIconUri() != null) {
-			fetchArtwork();
-			postNotification();
-		}
-		*/
+		 * Fetch album art
+		 */
 	}
 
 	private void updatePlaybackState(String error)
@@ -380,8 +410,9 @@ public class AutoPlexMusicService extends MediaBrowserServiceCompat
 
 		state_builder.setState(playback_state, pos, 1.0f, SystemClock.elapsedRealtime());
 
-		if (current_media != null)
-			state_builder.setActiveQueueItemId(new MediaSessionCompat.QueueItem(current_media.getDescription(), current_media.hashCode()).getQueueId());
+		if (QueueHelper.indexIsPlayable(current_queue_index, media_queue)) {
+			state_builder.setActiveQueueItemId(media_queue.get(current_queue_index).getQueueId());
+		}
 
 		media_session.setPlaybackState(state_builder.build());
 

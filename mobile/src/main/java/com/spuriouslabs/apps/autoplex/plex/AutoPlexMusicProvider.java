@@ -3,6 +3,7 @@ package com.spuriouslabs.apps.autoplex.plex;
 import android.media.MediaDescription;
 import android.os.AsyncTask;
 import android.support.v4.media.MediaBrowserCompat.MediaItem;
+import android.support.v4.media.session.MediaSessionCompat;
 import android.util.ArrayMap;
 import android.util.Log;
 
@@ -113,6 +114,11 @@ public class AutoPlexMusicProvider
 	public String getUrlForMedia(PlayableMenuItem i)
 	{
 		return connector.getPreferredUri() + i.getMediaUri();
+	}
+
+	public String getUrlForMedia(MediaSessionCompat.QueueItem i)
+	{
+		return getUrlForMedia(getMusic(i.getDescription().getMediaId()));
 	}
 
 	/**

@@ -7,6 +7,7 @@ import android.media.MediaPlayer;
 import android.media.session.PlaybackState;
 import android.net.Uri;
 import android.os.PowerManager;
+import android.support.v4.media.session.MediaSessionCompat;
 import android.text.TextUtils;
 import android.util.Log;
 
@@ -107,14 +108,16 @@ public class Player implements AudioManager.OnAudioFocusChangeListener, OnComple
 		return media_player != null ? media_player.getCurrentPosition() : current_position;
 	}
 
-	public void play(PlayableMenuItem track)
+	//public void play(PlayableMenuItem track)
+	public void play(MediaSessionCompat.QueueItem track)
 	{
+
 		play_on_focus_gain = true;
 		tryToGetAudioFocus();
-		boolean media_has_changed = !TextUtils.equals(track.getMediaId(), current_media_id);
+		boolean media_has_changed = !TextUtils.equals(track.getDescription().getMediaId(), current_media_id);
 		if (media_has_changed) {
 			state = PlaybackState.STATE_NONE;
-			current_media_id = track.getMediaId();
+			current_media_id = track.getDescription().getMediaId();
 		}
 
 		if (state == PlaybackState.STATE_PAUSED
