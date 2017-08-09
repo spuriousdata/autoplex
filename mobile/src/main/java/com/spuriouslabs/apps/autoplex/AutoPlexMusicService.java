@@ -4,6 +4,8 @@ import android.app.Notification;
 import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
+import android.graphics.Bitmap;
+import android.media.MediaMetadata;
 import android.support.v4.media.MediaBrowserCompat.MediaItem;
 import android.media.session.MediaSession;
 import android.media.session.PlaybackState;
@@ -14,6 +16,7 @@ import android.os.SystemClock;
 import android.support.annotation.Nullable;
 import android.support.v4.app.NotificationManagerCompat;
 import android.support.v4.media.MediaBrowserServiceCompat;
+import android.support.v4.media.MediaMetadataCompat;
 import android.support.v4.media.session.MediaButtonReceiver;
 import android.support.v4.media.session.MediaSessionCompat;
 import android.support.v4.media.session.PlaybackStateCompat;
@@ -22,6 +25,7 @@ import android.util.Log;
 import com.spuriouslabs.apps.autoplex.plex.AutoPlexMusicProvider;
 import com.spuriouslabs.apps.autoplex.plex.Player;
 import com.spuriouslabs.apps.autoplex.plex.PlexConnector;
+import com.spuriouslabs.apps.autoplex.plex.utils.AlbumArtCache;
 import com.spuriouslabs.apps.autoplex.plex.utils.PlayableMenuItem;
 import com.spuriouslabs.apps.autoplex.plex.utils.QueueHelper;
 
@@ -248,12 +252,17 @@ public class AutoPlexMusicService extends MediaBrowserServiceCompat
 			Log.d(TAG, "onPlay()");
 
 			if (media_queue == null || media_queue.isEmpty()) {
-				/*
-				media_queue = provider.getRandomQueue();
+				media_queue.clear();
+				String album = null;
+
+				for (PlayableMenuItem i : provider.getRandomAlbum()) {
+					if (album == null)
+						album = i.getAlbum();
+					media_queue.add(new MediaSessionCompat.QueueItem(i.getDescription(), i.hashCode()));
+				}
 				media_session.setQueue(media_queue);
-				media_session.setQueueTitle("Random Queue");
+				media_session.setQueueTitle(album);
 				current_queue_index = 0;
-				 */
 			}
 
 			if (media_queue != null && !media_queue.isEmpty())
@@ -374,12 +383,29 @@ public class AutoPlexMusicService extends MediaBrowserServiceCompat
 		}
 
 		MediaSessionCompat.QueueItem item = media_queue.get(current_queue_index);
-		PlayableMenuItem pi = provider.getMusic(item.getDescription().getMediaId());
+		final PlayableMenuItem pi = provider.getMusic(item.getDescription().getMediaId());
 		media_session.setMetadata(pi.getMetadata());
 
-		/*
-		 * Fetch album art
-		 */
+		if (pi.getAlbumArt() == null && pi.getAlbumArtUri() != null) {
+			AlbumArtCache.get_instance().fetch(provider.getAlbumArtUrlForMedia(pi), provider.getPlexTokenHeaders(), new AlbumArtCache.FetchListener()
+			{
+				@Override
+				public void onFetched(String url, Bitmap bitmap, Bitmap icon)
+				{
+					MediaMetadataCompat trackdata = pi.getMetadata();
+					trackdata = new MediaMetadataCompat.Builder(trackdata)
+							.putBitmap(MediaMetadata.METADATA_KEY_ALBUM_ART, bitmap)
+							.putBitmap(MediaMetadata.METADATA_KEY_DISPLAY_ICON, icon)
+							.build();
+
+					pi.setAlbumArt(bitmap);
+					pi.setDisplayIcon(icon);
+
+					if (media_queue.get(current_queue_index).getDescription().getMediaId().equals(pi.getMediaId()))
+						media_session.setMetadata(trackdata);
+				}
+			});
+		}
 	}
 
 	private void updatePlaybackState(String error)
@@ -394,7 +420,10 @@ public class AutoPlexMusicService extends MediaBrowserServiceCompat
 		 * This is the line that tells android auto what buttons to draw out.
 		 */
 		long playback_actions = PlaybackState.ACTION_PLAY | PlaybackState.ACTION_PLAY_FROM_MEDIA_ID
-				| PlaybackState.ACTION_SKIP_TO_NEXT | PlaybackState.ACTION_SKIP_TO_PREVIOUS;
+				 | PlaybackState.ACTION_SKIP_TO_PREVIOUS;
+
+		if (QueueHelper.indexIsPlayable(current_queue_index+1, media_queue))
+			playback_actions |= PlaybackState.ACTION_SKIP_TO_NEXT;
 
 		if (player.isPlaying())
 			playback_actions |= PlaybackState.ACTION_PAUSE;
