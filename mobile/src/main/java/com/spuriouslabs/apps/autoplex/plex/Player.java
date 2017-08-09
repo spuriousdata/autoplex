@@ -12,7 +12,6 @@ import android.text.TextUtils;
 import android.util.Log;
 
 import com.spuriouslabs.apps.autoplex.AutoPlexMusicService;
-import com.spuriouslabs.apps.autoplex.plex.utils.PlayableMenuItem;
 
 import java.io.IOException;
 

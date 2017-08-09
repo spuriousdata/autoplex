@@ -104,6 +104,8 @@ public class AutoPlexMusicService extends MediaBrowserServiceCompat
 	// Request code for starting the UI.
 	private static final int REQUEST_CODE = 99;
 
+	private static final int SEEK_OR_GO_BACK_THRESHOLD_MS = 5000;
+
 	private MediaSessionCompat media_session;
 	private boolean service_started;
 	public NotificationManagerCompat notification_manager;
@@ -150,7 +152,10 @@ public class AutoPlexMusicService extends MediaBrowserServiceCompat
 			@Override
 			public void onCompletion()
 			{
-				handleStopRequest();
+				if (QueueHelper.indexIsPlayable(current_queue_index+1, media_queue))
+					incrementQueueIndex(1);
+				else
+					handleStopRequest();
 			}
 
 			@Override
@@ -314,21 +319,27 @@ public class AutoPlexMusicService extends MediaBrowserServiceCompat
 		public void onSkipToPrevious()
 		{
 			Log.d(TAG, "onSkipToPrevious");
-			incrementQueueIndex(-1);
-		}
-
-		private void incrementQueueIndex(int increment)
-		{
-			current_queue_index += increment;
-			if (media_queue != null && (current_queue_index >= media_queue.size() || current_queue_index < 0)) {
-				current_queue_index = 0;
-			}
-			if (QueueHelper.indexIsPlayable(current_queue_index, media_queue)) {
-				handlePlayRequest();
+			if (player.getCurrentStreamPosition() > SEEK_OR_GO_BACK_THRESHOLD_MS) {
+				Log.d(TAG, "Current stream position is > " + SEEK_OR_GO_BACK_THRESHOLD_MS/1000 + " seconds, so we treat this as a seekTo(0) instead of go to previous");
+				player.seekTo(0);
 			} else {
-				Log.e(TAG, "Error, can't play beyond end of queue");
-				handleStopRequest();
+				Log.d(TAG, "current stream position is < " + SEEK_OR_GO_BACK_THRESHOLD_MS/1000 + " seconds, so we go back instead of seekTo(0)");
+				incrementQueueIndex(-1);
 			}
+		}
+	}
+
+	private void incrementQueueIndex(int increment)
+	{
+		current_queue_index += increment;
+		if (media_queue != null && (current_queue_index >= media_queue.size() || current_queue_index < 0)) {
+			current_queue_index = 0;
+		}
+		if (QueueHelper.indexIsPlayable(current_queue_index, media_queue)) {
+			handlePlayRequest();
+		} else {
+			Log.e(TAG, "Error, can't play beyond end of queue");
+			handleStopRequest();
 		}
 	}
 
