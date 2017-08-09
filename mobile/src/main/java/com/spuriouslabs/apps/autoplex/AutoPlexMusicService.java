@@ -6,6 +6,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.media.MediaMetadata;
+import android.provider.MediaStore;
 import android.support.v4.media.MediaBrowserCompat.MediaItem;
 import android.media.session.MediaSession;
 import android.media.session.PlaybackState;
@@ -333,6 +334,20 @@ public class AutoPlexMusicService extends MediaBrowserServiceCompat
 				Log.d(TAG, "current stream position is < " + SEEK_OR_GO_BACK_THRESHOLD_MS/1000 + " seconds, so we go back instead of seekTo(0)");
 				incrementQueueIndex(-1);
 			}
+		}
+
+		@Override
+		public void onPlayFromSearch(String query, Bundle extras)
+		{
+			Log.d(TAG, "onPlayFromSearch(" + query + ", " + extras + ")");
+			String media_focus = extras.getString(MediaStore.EXTRA_MEDIA_FOCUS);
+			String artist = extras.getString(MediaStore.EXTRA_MEDIA_ARTIST);
+			String album = extras.getString(MediaStore.EXTRA_MEDIA_ALBUM);
+			String genre = extras.getString(MediaStore.EXTRA_MEDIA_GENRE);
+			String title = extras.getString(MediaStore.EXTRA_MEDIA_TITLE);
+			String playlist = extras.getString(MediaStore.EXTRA_MEDIA_PLAYLIST);
+			Log.d(TAG, media_focus + artist + album + genre + title + playlist);
+
 		}
 	}
 
