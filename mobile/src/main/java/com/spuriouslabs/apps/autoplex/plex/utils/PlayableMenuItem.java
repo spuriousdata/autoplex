@@ -1,11 +1,13 @@
 package com.spuriouslabs.apps.autoplex.plex.utils;
 
+import android.graphics.Bitmap;
 import android.support.v4.media.MediaMetadataCompat;
 
 import static android.media.MediaMetadata.METADATA_KEY_ALBUM;
+import static android.media.MediaMetadata.METADATA_KEY_ALBUM_ART;
 import static android.media.MediaMetadata.METADATA_KEY_ALBUM_ART_URI;
 import static android.media.MediaMetadata.METADATA_KEY_ARTIST;
-import static android.media.MediaMetadata.METADATA_KEY_DISPLAY_ICON_URI;
+import static android.media.MediaMetadata.METADATA_KEY_DISPLAY_ICON;
 import static android.media.MediaMetadata.METADATA_KEY_DURATION;
 import static android.media.MediaMetadata.METADATA_KEY_GENRE;
 import static android.media.MediaMetadata.METADATA_KEY_MEDIA_ID;
@@ -30,7 +32,7 @@ public class PlayableMenuItem extends BrowsableMenuItem
 		super(title, key, icon_uri, FLAG_PLAYABLE);
 		metadata_builder.putString(METADATA_KEY_MEDIA_ID, key);
 		metadata_builder.putString(METADATA_KEY_TITLE, title);
-		metadata_builder.putString(METADATA_KEY_DISPLAY_ICON_URI, icon_uri);
+		metadata_builder.putString(METADATA_KEY_ALBUM_ART_URI, icon_uri);
 		metadata = metadata_builder.build();
 	}
 
@@ -94,6 +96,12 @@ public class PlayableMenuItem extends BrowsableMenuItem
 	private void putLong(String key, long value)
 	{
 		metadata_builder.putLong(key, value);
+		metadata = metadata_builder.build();
+	}
+
+	private void putBitmap(String key, Bitmap value)
+	{
+		metadata_builder.putBitmap(key, value);
 		metadata = metadata_builder.build();
 	}
 
@@ -161,4 +169,16 @@ public class PlayableMenuItem extends BrowsableMenuItem
 	{
 		putLong(METADATA_KEY_NUM_TRACKS, num_tracks);
 	}
+
+	public Bitmap getAlbumArt()
+	{
+		return metadata.getBitmap(METADATA_KEY_ALBUM_ART);
+	}
+
+	public void setAlbumArt(Bitmap image)
+	{
+		putBitmap(METADATA_KEY_ALBUM_ART, image);
+	}
+
+	public void setDisplayIcon(Bitmap image) { putBitmap(METADATA_KEY_DISPLAY_ICON, image);}
 }

@@ -19,10 +19,12 @@ import org.xmlpull.v1.XmlPullParserException;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Random;
 
 import static android.media.browse.MediaBrowser.MediaItem.FLAG_PLAYABLE;
 
@@ -99,6 +101,18 @@ public class AutoPlexMusicProvider
 		return album;
 	}
 
+	public List<PlayableMenuItem> getRandomAlbum()
+	{
+		Random r = new Random();
+		Collection<PlayableMenuItem> ids = tracks_by_id.values();
+		String random_album_id = (String)ids.toArray()[r.nextInt(ids.size())];
+
+		PlayableMenuItem random_track = tracks_by_id.get(random_album_id);
+		if (random_track != null)
+			return getAlbum(random_track.getAlbumUri());
+		return Collections.emptyList();
+	}
+
 	public Map<String, String> getPlexTokenHeaders()
 	{
 		Map<String, String> headers = new ArrayMap<>();
@@ -119,6 +133,11 @@ public class AutoPlexMusicProvider
 	public String getUrlForMedia(MediaSessionCompat.QueueItem i)
 	{
 		return getUrlForMedia(getMusic(i.getDescription().getMediaId()));
+	}
+
+	public String getAlbumArtUrlForMedia(PlayableMenuItem i)
+	{
+		return connector.getPreferredUri() + i.getAlbumArtUri();
 	}
 
 	/**
