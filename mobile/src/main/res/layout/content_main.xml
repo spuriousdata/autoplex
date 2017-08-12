@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="utf-8"?>
+<android.support.constraint.ConstraintLayout
+	xmlns:android="http://schemas.android.com/apk/res/android"
+	xmlns:app="http://schemas.android.com/apk/res-auto"
+	xmlns:tools="http://schemas.android.com/tools"
+	android:layout_width="match_parent"
+	android:layout_height="match_parent"
+	app:layout_behavior="@string/appbar_scrolling_view_behavior"
+	tools:context="com.spuriouslabs.apps.autoplex.MainActivity"
+	tools:showIn="@layout/activity_main">
+
+	<TextView
+		android:id="@+id/textView7"
+		android:layout_width="wrap_content"
+		android:layout_height="17dp"
+		android:text="Log in to your Plex Accout"
+		android:layout_marginLeft="16dp"
+		app:layout_constraintLeft_toLeftOf="parent"
+		android:layout_marginRight="16dp"
+		app:layout_constraintRight_toRightOf="parent"
+		app:layout_constraintTop_toTopOf="parent"
+		android:layout_marginTop="16dp"
+		app:layout_constraintHorizontal_bias="0.502"/>
+
+	<TextView
+		android:id="@+id/textView8"
+		android:layout_width="wrap_content"
+		android:layout_height="wrap_content"
+		android:layout_marginLeft="16dp"
+		android:layout_marginRight="0dp"
+		android:labelFor="@+id/plex_username"
+		android:text="@string/username"
+		app:layout_constraintBaseline_toBaselineOf="@+id/plex_username"
+		app:layout_constraintHorizontal_bias="0.0"
+		app:layout_constraintLeft_toLeftOf="parent"
+		app:layout_constraintRight_toLeftOf="@+id/plex_username"/>
+
+	<TextView
+		android:id="@+id/textView9"
+		android:layout_width="wrap_content"
+		android:layout_height="wrap_content"
+		android:layout_marginLeft="16dp"
+		android:layout_marginRight="0dp"
+		android:labelFor="@+id/plex_password"
+		android:text="@string/password"
+		app:layout_constraintBaseline_toBaselineOf="@+id/plex_password"
+		app:layout_constraintHorizontal_bias="0.0"
+		app:layout_constraintLeft_toLeftOf="parent"
+		app:layout_constraintRight_toLeftOf="@+id/plex_password"/>
+
+	<EditText
+		android:id="@+id/plex_username"
+		android:layout_width="301dp"
+		android:layout_height="42dp"
+		android:ems="10"
+		android:inputType="textPersonName"
+		android:text="Name"
+		android:layout_marginRight="16dp"
+		app:layout_constraintRight_toRightOf="parent"
+		android:layout_marginTop="16dp"
+		app:layout_constraintTop_toBottomOf="@+id/textView7"
+		/>
+
+	<EditText
+		android:id="@+id/plex_password"
+		android:layout_width="300dp"
+		android:layout_height="43dp"
+		android:ems="10"
+		android:inputType="textPassword"
+		android:layout_marginTop="16dp"
+		app:layout_constraintTop_toBottomOf="@+id/plex_username"
+		android:layout_marginRight="16dp"
+		app:layout_constraintRight_toRightOf="parent"
+		android:layout_marginLeft="0dp"
+		app:layout_constraintLeft_toLeftOf="@+id/plex_username"/>
+
+	<Button
+		android:id="@+id/login_button"
+		android:layout_width="wrap_content"
+		android:layout_height="wrap_content"
+		android:layout_marginRight="16dp"
+		android:layout_marginTop="16dp"
+		android:onClick="onLogin"
+		android:text="@string/login"
+		app:layout_constraintRight_toRightOf="parent"
+		app:layout_constraintTop_toBottomOf="@+id/plex_password"/>
+</android.support.constraint.ConstraintLayout>

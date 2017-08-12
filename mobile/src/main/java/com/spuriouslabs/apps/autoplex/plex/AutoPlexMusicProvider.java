@@ -176,7 +176,7 @@ public class AutoPlexMusicProvider
 
 			Log.d(TAG, "Getting url: " + menu_url);
 
-			connector.addRequest(new PlexTokenHttpRequest(Request.Method.GET, menu_url,
+			connector.addRequest(new PlexTokenHttpRequest(menu_url,
 					connector.getToken(), new Response.Listener<String>() {
 				@Override
 				public void onResponse(String response) {

@@ -172,7 +172,7 @@ public class AutoPlexMusicService extends MediaBrowserServiceCompat
 		});
 
 
-		Intent intent = new Intent(ctx, MainActivity.class);
+		Intent intent = new Intent(ctx, PlexSettingsActivity.class);
 		intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
 		PendingIntent pi = PendingIntent.getActivity(ctx, REQUEST_CODE, intent,
 				PendingIntent.FLAG_UPDATE_CURRENT);

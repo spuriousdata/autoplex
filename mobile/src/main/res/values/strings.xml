@@ -18,4 +18,8 @@
 	<string name="all_artists_menu_key">all</string>
 	<string name="unknown_error">An unknown error has occurred.</string>
 	<string name="relay_warning">Warning: Relay servers have bandwidth capped to 2mpbs. Don\'t use them unless you have to.</string>
+	<string name="title_activity_main">MainActivity</string>
+	<string name="username">Username</string>
+	<string name="password">Password</string>
+	<string name="login">Login</string>
 </resources>
