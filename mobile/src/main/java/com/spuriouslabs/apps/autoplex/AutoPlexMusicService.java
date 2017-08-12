@@ -262,19 +262,22 @@ public class AutoPlexMusicService extends MediaBrowserServiceCompat
 			if (media_queue == null)
 				media_queue = new ArrayList<>();
 
-			if (!media_queue.isEmpty())
+			/*
+			if (media_queue.isEmpty()) {
 				media_queue.clear();
 
-			String album = null;
+				String album = null;
 
-			for (PlayableMenuItem i : provider.getRandomAlbum()) {
-				if (album == null)
-					album = i.getAlbum();
-				media_queue.add(new MediaSessionCompat.QueueItem(i.getDescription(), i.hashCode()));
+				for (PlayableMenuItem i : provider.getRandomAlbum()) {
+					if (album == null)
+						album = i.getAlbum();
+					media_queue.add(new MediaSessionCompat.QueueItem(i.getDescription(), i.hashCode()));
+				}
+				media_session.setQueue(media_queue);
+				media_session.setQueueTitle(album);
+				current_queue_index = 0;
 			}
-			media_session.setQueue(media_queue);
-			media_session.setQueueTitle(album);
-			current_queue_index = 0;
+			*/
 
 
 			if (!media_queue.isEmpty())

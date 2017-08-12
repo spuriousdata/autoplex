@@ -1,7 +1,5 @@
 package com.spuriouslabs.apps.autoplex;
 
-import android.content.Intent;
-import android.support.design.widget.BaseTransientBottomBar;
 import android.support.design.widget.Snackbar;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
@@ -17,7 +15,6 @@ import com.spuriouslabs.apps.autoplex.plex.utils.PlexCallback;
 import com.spuriouslabs.apps.autoplex.plex.PlexConnector;
 import com.spuriouslabs.apps.autoplex.plex.utils.PlexConnectionSet;
 
-import static android.widget.Toast.LENGTH_LONG;
 
 public class MainActivity extends AppCompatActivity
 {
