@@ -10,13 +10,11 @@ import java.util.HashMap;
 
 public class PlexTokenHttpRequest extends HttpRequest
 {
-	private String token;
-
-	public PlexTokenHttpRequest(int method, String uri, String token,
+	public PlexTokenHttpRequest(String uri, String token,
 								Response.Listener<String> listener,
 								Response.ErrorListener error_listener)
 	{
-		super(method, uri, listener, error_listener);
+		super(Method.GET, uri, listener, error_listener);
 		headers = new HashMap<>();
 		headers.put("X-Plex-Token", token);
 	}

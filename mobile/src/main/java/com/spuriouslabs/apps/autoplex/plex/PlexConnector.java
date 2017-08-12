@@ -11,6 +11,7 @@ import com.android.volley.VolleyError;
 import com.spuriouslabs.apps.autoplex.http.HttpRequest;
 import com.android.volley.toolbox.Volley;
 import com.spuriouslabs.apps.autoplex.R;
+import com.spuriouslabs.apps.autoplex.http.PlexLoginHttpRequest;
 import com.spuriouslabs.apps.autoplex.http.PlexTokenHttpRequest;
 import com.spuriouslabs.apps.autoplex.plex.utils.MusicLibrary;
 import com.spuriouslabs.apps.autoplex.plex.utils.PlexCallback;
@@ -18,9 +19,11 @@ import com.spuriouslabs.apps.autoplex.plex.utils.PlexConnectionSet;
 import com.spuriouslabs.apps.autoplex.plex.xml.ConnectionResourceParser;
 import com.spuriouslabs.apps.autoplex.plex.xml.LibrarySectionParser;
 
+import org.json.JSONObject;
 import org.xmlpull.v1.XmlPullParserException;
 
 import java.io.IOException;
+import java.util.UUID;
 
 import static android.content.Context.MODE_PRIVATE;
 
@@ -30,11 +33,13 @@ import static android.content.Context.MODE_PRIVATE;
 
 public class PlexConnector
 {
+	private final String TAG = PlexConnector.class.getSimpleName();
 	private SharedPreferences settings;
 	private PlexConnectionSet connections;
 	private String token;
 	private RequestQueue rq;
 	private MusicLibrary music_library;
+	private String plex_client_id;
 
 	private static PlexConnector instance = null;
 
@@ -50,10 +55,17 @@ public class PlexConnector
 		settings = ctx.getSharedPreferences(ctx.getString(R.string.settings_name), MODE_PRIVATE);
 		token = settings.getString(ctx.getString(R.string.token_name), null);
 
+		plex_client_id = settings.getString("plex_client_id", null);
+
+		if (plex_client_id == null) {
+			plex_client_id = UUID.randomUUID().toString();
+			settings.edit().putString("plex_client_id", plex_client_id).apply();
+		}
+
 		String token_placeholder = ctx.getString(R.string.token_placeholder);
 
 		if (token_placeholder.equals(token))
-			Log.e("autoplex", "Token not set");
+			Log.e(TAG, "Token not set");
 
 		String ml_name = settings.getString("music_library_name", null);
 		int ml_key = settings.getInt("music_library_key", -1);
@@ -63,13 +75,37 @@ public class PlexConnector
 		rq = Volley.newRequestQueue(ctx);
 	}
 
+	public void login(String username, String password, final PlexCallback<String> callback)
+	{
+		addRequest(new PlexLoginHttpRequest(username, password, plex_client_id, new Response.Listener<String>() {
+			@Override
+			public void onResponse(String response)
+			{
+				try {
+					JSONObject json = new JSONObject(response);
+					token = json.getJSONObject("user").getString("authToken");
+					settings.edit().putString("plex_token", token).apply();
+					callback.callback(response);
+				} catch (Exception e) {
+					Log.e(TAG, "Error" + e.toString());
+				}
+			}
+		}, new Response.ErrorListener() {
+			@Override
+			public void onErrorResponse(VolleyError error)
+			{
+				Log.e(TAG, error.getMessage());
+			}
+		}));
+	}
+
 	public void discoverMusicLibraryKey(String plex_uri, final PlexCallback<MusicLibrary> callback)
 	{
 		String url = plex_uri + "/library/sections/";
 
-		Log.d("autoplex", "Making http request to " + url);
+		Log.d(TAG, "Making http request to " + url);
 
-		addRequest(new PlexTokenHttpRequest(Request.Method.GET, url, token, new Response.Listener<String>() {
+		addRequest(new PlexTokenHttpRequest(url, token, new Response.Listener<String>() {
 			@Override
 			public void onResponse(String response)
 			{
@@ -81,14 +117,14 @@ public class PlexConnector
 							.apply();
 					callback.callback(music_library);
 				} catch (XmlPullParserException | IOException e) {
-					Log.e("autoplex", "Exception at line 95: " + e.toString());
+					Log.e(TAG, "Exception at line 95: " + e.toString());
 				}
 			}
 		}, new Response.ErrorListener() {
 			@Override
 			public void onErrorResponse(VolleyError error)
 			{
-				Log.e("autoplex", error.getMessage());
+				Log.e(TAG, error.getMessage());
 			}
 		}));
 	}
