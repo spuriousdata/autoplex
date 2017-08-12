@@ -101,23 +101,6 @@ public class AutoPlexMusicProvider
 		return album;
 	}
 
-	public List<PlayableMenuItem> getRandomAlbum()
-	{
-		try {
-			Random r = new Random();
-			Collection<PlayableMenuItem> ids = tracks_by_id.values();
-			String random_album_id = (String) ids.toArray()[r.nextInt(ids.size())];
-
-			PlayableMenuItem random_track = tracks_by_id.get(random_album_id);
-			if (random_track != null)
-				return getAlbum(random_track.getAlbumUri());
-			return Collections.emptyList();
-		} catch (Exception e) {
-			Log.e(TAG, "Error: " + e.toString());
-			return Collections.emptyList();
-		}
-	}
-
 	public Map<String, String> getPlexTokenHeaders()
 	{
 		Map<String, String> headers = new ArrayMap<>();
