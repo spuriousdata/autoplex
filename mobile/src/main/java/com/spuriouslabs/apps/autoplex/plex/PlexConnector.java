@@ -177,6 +177,23 @@ public class PlexConnector
 		return uri;
 	}
 
+	public void testConnection(final PlexCallback<Boolean> callback)
+	{
+		addRequest(new PlexTokenHttpRequest(getMusicLibraryUrl(), token, new Response.Listener<String>() {
+			@Override
+			public void onResponse(String response)
+			{
+				callback.callback(true);
+			}
+		}, new Response.ErrorListener() {
+			@Override
+			public void onErrorResponse(VolleyError error)
+			{
+				callback.callback(false);
+			}
+		}));
+	}
+
 	public void addRequest(HttpRequest r)
 	{
 		rq.add(r);
