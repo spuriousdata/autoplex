@@ -12,6 +12,7 @@ import com.spuriouslabs.apps.autoplex.http.HttpRequest;
 import com.android.volley.toolbox.Volley;
 import com.spuriouslabs.apps.autoplex.R;
 import com.spuriouslabs.apps.autoplex.http.PlexLoginHttpRequest;
+import com.spuriouslabs.apps.autoplex.http.PlexTokenHttpHeadRequest;
 import com.spuriouslabs.apps.autoplex.http.PlexTokenHttpRequest;
 import com.spuriouslabs.apps.autoplex.plex.utils.MusicLibrary;
 import com.spuriouslabs.apps.autoplex.plex.utils.PlexCallback;
@@ -179,7 +180,7 @@ public class PlexConnector
 
 	public void testConnection(final PlexCallback<Boolean> callback)
 	{
-		addRequest(new PlexTokenHttpRequest(getMusicLibraryUrl(), token, new Response.Listener<String>() {
+		addRequest(new PlexTokenHttpHeadRequest(getMusicLibraryUrl(), token, new Response.Listener<String>() {
 			@Override
 			public void onResponse(String response)
 			{
