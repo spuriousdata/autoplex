@@ -262,24 +262,6 @@ public class AutoPlexMusicService extends MediaBrowserServiceCompat
 			if (media_queue == null)
 				media_queue = new ArrayList<>();
 
-			/*
-			if (media_queue.isEmpty()) {
-				media_queue.clear();
-
-				String album = null;
-
-				for (PlayableMenuItem i : provider.getRandomAlbum()) {
-					if (album == null)
-						album = i.getAlbum();
-					media_queue.add(new MediaSessionCompat.QueueItem(i.getDescription(), i.hashCode()));
-				}
-				media_session.setQueue(media_queue);
-				media_session.setQueueTitle(album);
-				current_queue_index = 0;
-			}
-			*/
-
-
 			if (!media_queue.isEmpty())
 				handlePlayRequest();
 		}
@@ -347,6 +329,7 @@ public class AutoPlexMusicService extends MediaBrowserServiceCompat
 		}
 		if (QueueHelper.indexIsPlayable(current_queue_index, media_queue)) {
 			handlePlayRequest();
+			//player.resetPlayHead();
 		} else {
 			Log.e(TAG, "Error, can't play beyond end of queue");
 			handleStopRequest();

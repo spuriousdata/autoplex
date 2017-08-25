@@ -1,6 +1,6 @@
 apply plugin: 'com.android.application'
 android {
-	compileSdkVersion 25
+	compileSdkVersion 26
 	buildToolsVersion '26.0.1'
 	defaultConfig {
 		applicationId "com.spuriouslabs.apps.autoplex"
@@ -27,7 +27,6 @@ dependencies {
 	androidTestCompile('com.android.support.test.espresso:espresso-core:2.2.1', {
 		exclude group: 'com.android.support', module: 'support-annotations'
 	})
-
 	//compile 'com.github.bumptech.glide:glide:3.8.0'
 	compile 'com.android.support:appcompat-v7:26'
 	compile 'com.android.support.constraint:constraint-layout:1.0.2'
