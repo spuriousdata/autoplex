@@ -56,6 +56,7 @@ public class Player implements AudioManager.OnAudioFocusChangeListener, OnComple
 	private final AutoPlexMusicProvider provider;
 	private int state = PlaybackState.STATE_NONE;
 	private boolean play_on_focus_gain;
+	private boolean media_has_changed;
 	private Callback callback;
 	private Context ctx;
 
@@ -107,22 +108,30 @@ public class Player implements AudioManager.OnAudioFocusChangeListener, OnComple
 		return media_player != null ? media_player.getCurrentPosition() : current_position;
 	}
 
-	//public void play(PlayableMenuItem track)
+	public void resetPlayHead()
+	{
+		media_player.seekTo(0);
+	}
+
 	public void play(MediaSessionCompat.QueueItem track)
 	{
 
 		play_on_focus_gain = true;
 		tryToGetAudioFocus();
-		boolean media_has_changed = !TextUtils.equals(track.getDescription().getMediaId(), current_media_id);
+		media_has_changed = !TextUtils.equals(track.getDescription().getMediaId(), current_media_id);
+		Log.d(TAG, "media_has_changed: " + media_has_changed);
 		if (media_has_changed) {
+			Log.d(TAG, "Media changed to: " + track.getDescription().getTitle());
 			state = PlaybackState.STATE_NONE;
 			current_media_id = track.getDescription().getMediaId();
 		}
 
 		if (state == PlaybackState.STATE_PAUSED
 				&& !media_has_changed && media_player != null) {
+			Log.d(TAG, "state is paused and !media_has_changed");
 			configMediaPlayerState();
 		} else {
+			Log.d(TAG, "state is not paused or media_has_changed");
 			state = PlaybackState.STATE_STOPPED;
 			relaxResources(false); // release everything except MediaPlayer
 
@@ -250,12 +259,17 @@ public class Player implements AudioManager.OnAudioFocusChangeListener, OnComple
 			// If we were playing when we lost focus, we need to resume playing.
 			if (play_on_focus_gain) {
 				if (media_player != null && !media_player.isPlaying()) {
+					if (media_has_changed)
+						current_position = 0;
+
 					Log.d(TAG, "configMediaPlayerState startMediaPlayer. seeking to "
 							+ current_position);
 					if (current_position == media_player.getCurrentPosition()) {
+						Log.d(TAG, "Position matches, so not realy seeking to " + current_position);
 						media_player.start();
 						state = PlaybackState.STATE_PLAYING;
 					} else {
+						Log.d(TAG, "Actually seeking to position " + current_position);
 						media_player.seekTo(current_position);
 						state = PlaybackState.STATE_BUFFERING;
 					}
@@ -348,6 +362,7 @@ public class Player implements AudioManager.OnAudioFocusChangeListener, OnComple
 		// The media player is done preparing. That means we can start playing if we
 		// have audio focus.
 		configMediaPlayerState();
+		media_has_changed = false;
 	}
 
 	/**
