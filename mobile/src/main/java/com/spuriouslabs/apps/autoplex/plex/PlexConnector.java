@@ -164,22 +164,31 @@ public class PlexConnector
 	{
 		String uri = null;
 
-		switch (settings.getString("preferred_server", null)) {
-			case "local":
-				uri = settings.getString("local_server_uri", null);
-				break;
-			case "relay":
-				uri = settings.getString("relay_server_uri", null);
-				break;
-			case "remote":
-				uri = settings.getString("remote_server_uri", null);
-				break;
+		String ps = settings.getString("preferred_server", null);
+		if (ps != null) {
+			switch (ps) {
+				case "local":
+					uri = settings.getString("local_server_uri", null);
+					break;
+				case "relay":
+					uri = settings.getString("relay_server_uri", null);
+					break;
+				case "remote":
+					uri = settings.getString("remote_server_uri", null);
+					break;
+			}
 		}
 		return uri;
 	}
 
 	public void testConnection(final PlexCallback<Boolean> callback)
 	{
+		String url = getMusicLibraryUrl();
+		if (url == null) {
+			callback.callback(false);
+			return;
+		}
+
 		addRequest(new PlexTokenHttpHeadRequest(getMusicLibraryUrl(), token, new Response.Listener<String>() {
 			@Override
 			public void onResponse(String response)
@@ -207,7 +216,9 @@ public class PlexConnector
 
 	public String getMusicLibraryUrl(String append)
 	{
-		return getPreferredUri() + "/library/sections/" + music_library.getId() + append;
+		if (music_library != null)
+			return getPreferredUri() + "/library/sections/" + music_library.getId() + append;
+		return null;
 	}
 
 	public String getToken()
