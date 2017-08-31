@@ -36,15 +36,15 @@ public class MediaNotificationHelper
 		}
 
 		boolean isPlaying = mPlaybackState.getState() == PlaybackStateCompat.STATE_PLAYING;
-		NotificationCompat.Action action = isPlaying
-				? new NotificationCompat.Action(R.drawable.ic_pause_white_24dp,
-				context.getString(R.string.label_pause),
-				MediaButtonReceiver.buildMediaButtonPendingIntent(context,
-						PlaybackStateCompat.ACTION_PAUSE))
-				: new NotificationCompat.Action(R.drawable.ic_play_arrow_white_24dp,
-				context.getString(R.string.label_play),
-				MediaButtonReceiver.buildMediaButtonPendingIntent(context,
-						PlaybackStateCompat.ACTION_PLAY));
+		NotificationCompat.Action action;
+		if (isPlaying)
+			action = new NotificationCompat.Action(R.drawable.ic_pause_white_24dp, context.getString(R.string.label_pause),
+					MediaButtonReceiver.buildMediaButtonPendingIntent(context,
+							PlaybackStateCompat.ACTION_PAUSE));
+		else
+			action = new NotificationCompat.Action(R.drawable.ic_play_arrow_white_24dp, context.getString(R.string.label_play),
+					MediaButtonReceiver.buildMediaButtonPendingIntent(context,
+							PlaybackStateCompat.ACTION_PLAY));
 
 		MediaDescriptionCompat description = mMetadata.getDescription();
 		Bitmap art = description.getIconBitmap();
